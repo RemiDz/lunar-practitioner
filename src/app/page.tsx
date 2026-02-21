@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { useSettings } from '@/hooks/useSettings';
 import { useSessionIntelligence } from '@/hooks/useSessionIntelligence';
 import { useAudio } from '@/hooks/useAudio';
 import { getLunarDistance } from '@/lib/moon-calculations';
 import { getPhaseDirection } from '@/lib/moon-calculations';
 import { ZODIAC_CONFIGS } from '@/data/zodiac';
-import { EASE_LUNAR, DURATION_PAGE_ENTER, STAGGER_PAGE_ZONE } from '@/lib/motion-constants';
 import { MoonCanvas } from '@/components/MoonCanvas';
 import { SessionPanel } from '@/components/SessionPanel';
 import { SettingsModal } from '@/components/Settings';
@@ -73,11 +71,8 @@ export default function Home() {
 
       <main className="min-h-screen bg-void-black text-selenite-white font-body">
         {/* ── Zone 1: Live Indicator Bar ────────────── */}
-        <motion.header
+        <header
           className="sticky top-0 z-50 backdrop-blur-md bg-void-black/70 border-b border-moonsilver/10"
-          initial={splashDismissed ? false : { opacity: 0, y: -12 }}
-          animate={{ opacity: splashDismissed ? 1 : 0, y: splashDismissed ? 0 : -12 }}
-          transition={{ duration: DURATION_PAGE_ENTER, ease: [...EASE_LUNAR], delay: 0 }}
         >
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4 text-sm">
             <div className="flex items-center gap-2">
@@ -144,18 +139,15 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </motion.header>
+        </header>
 
         {/* ── Zone 2: Moon Canvas (45vh) ────────────── */}
-        <motion.section
+        <section
           className="relative w-full"
           style={{ height: '45vh', minHeight: 320 }}
-          initial={splashDismissed ? false : { opacity: 0, scale: 0.97 }}
-          animate={{ opacity: splashDismissed ? 1 : 0, scale: splashDismissed ? 1 : 0.97 }}
-          transition={{ duration: DURATION_PAGE_ENTER, ease: [...EASE_LUNAR], delay: STAGGER_PAGE_ZONE }}
         >
           <MoonCanvas moonData={moonData} zodiacPosition={zodiacPosition} />
-        </motion.section>
+        </section>
 
         {/* ── Zone 3: Phase Identity ─────────────────── */}
         <section className="max-w-2xl mx-auto px-6 py-10 text-center">
