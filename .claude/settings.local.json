@@ -17,7 +17,9 @@
       "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && curl -L -o public/textures/moon-surface.jpg \"https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_2048.jpg\" 2>&1)",
       "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && curl -L -o public/textures/moon-surface.jpg \"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/FullMoon2010.jpg/1280px-FullMoon2010.jpg\" 2>&1)",
       "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && curl -L -o public/textures/moon-surface.jpg \"https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/moon_1024.jpg\" --max-redirs 10 2>&1)",
-      "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && npm run build 2>&1)"
+      "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && npm run build 2>&1)",
+      "Bash(cd \"C:/Users/rdzingel/Desktop/MY_APPS/MoonApp\" && npm run build 2>&1)",
+      "Bash(cd \"C:/Users/rdzingel/Desktop/MY_APPS/MoonApp\" && git push 2>&1)"
     ]
   }
 }
