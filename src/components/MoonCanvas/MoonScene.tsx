@@ -26,22 +26,41 @@ const terminatorFragmentShader = /* glsl */ `
   varying vec2 vUv;
 
   void main() {
-    // Phase to light direction:
-    // phase=0   → light behind (new moon, dark)
-    // phase=0.25 → light from right (first quarter)
-    // phase=0.5  → light toward viewer (full moon)
-    // phase=0.75 → light from left (last quarter)
-    float phaseAngle = uPhase * 6.283185;
-    vec3 lightDir = normalize(vec3(sin(phaseAngle), 0.0, -cos(phaseAngle)));
-
-    float illumination = dot(vNormal, lightDir);
-    float shadow = smoothstep(-0.05, 0.15, illumination);
-
     vec4 texColor = texture2D(uTexture, vUv);
+
+    // Project 3D surface normal to 2D disk coordinates (as seen from camera)
+    vec2 disk = vNormal.xy;
+
+    // Elliptical terminator model:
+    // k = cos(phase * 2π) controls the terminator's x-radius
+    // phase 0 (new):  k=1  → terminator at right limb → all dark
+    // phase 0.25 (Q1): k=0  → terminator at centre → right half lit
+    // phase 0.5 (full): k=-1 → terminator at left limb → all lit
+    float phaseAngle = uPhase * 6.283185;
+    float k = cos(phaseAngle);
+    float sinP = sin(phaseAngle);
+
+    // Limb x-radius at this y-height (circle cross-section)
+    float limbX = sqrt(max(0.0, 1.0 - disk.y * disk.y));
+
+    // Terminator x-position traces an ellipse as y varies
+    float termX = k * limbX;
+
+    // Signed distance from terminator (positive = lit side)
+    // sinP >= 0 for waxing (right side lit), < 0 for waning (left side lit)
+    float dx = disk.x - termX;
+    float signedDist = sinP >= 0.0 ? dx : -dx;
+
+    // Smooth shadow edge
+    float shadow = smoothstep(-0.06, 0.06, signedDist);
+
+    // Limb darkening for 3D depth (brighter at centre, darker at edges)
+    float depth = max(0.0, vNormal.z);
+    float limbDarkening = mix(0.6, 1.0, pow(depth, 0.4));
 
     // Earthshine: faint glow on the dark side
     float earthshine = 0.03;
-    float light = max(shadow, earthshine);
+    float light = max(shadow * limbDarkening, earthshine);
 
     gl_FragColor = vec4(texColor.rgb * light, 1.0);
   }
