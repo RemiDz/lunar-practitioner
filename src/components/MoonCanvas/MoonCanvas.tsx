@@ -28,6 +28,46 @@ interface ShootingStar {
   length: number;
 }
 
+function createStarSprite(size: number, brightness: number, hue?: number): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  const s = Math.ceil(size * 2 + 4);
+  c.width = c.height = s;
+  const ctx = c.getContext('2d')!;
+  const cx = s / 2;
+  const grad = ctx.createRadialGradient(cx, cx, 0, cx, cx, size + 1);
+  if (hue !== undefined && hue > 0) {
+    const sat = hue === 220 ? 60 : 50;
+    grad.addColorStop(0, `hsla(${hue}, ${sat}%, 85%, ${brightness})`);
+    grad.addColorStop(0.3, `hsla(${hue}, ${sat}%, 85%, ${brightness * 0.5})`);
+    grad.addColorStop(0.7, `hsla(${hue}, ${sat}%, 85%, ${brightness * 0.1})`);
+    grad.addColorStop(1, 'transparent');
+  } else {
+    grad.addColorStop(0, `rgba(240, 238, 248, ${brightness})`);
+    grad.addColorStop(0.3, `rgba(240, 238, 248, ${brightness * 0.5})`);
+    grad.addColorStop(0.7, `rgba(240, 238, 248, ${brightness * 0.1})`);
+    grad.addColorStop(1, 'transparent');
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, s, s);
+  return c;
+}
+
+// Pre-rendered star sprites (keyed by size bucket)
+interface StarSprites {
+  white: HTMLCanvasElement[];
+  blue: HTMLCanvasElement[];
+  warm: HTMLCanvasElement[];
+}
+
+function createAllStarSprites(): StarSprites {
+  const sizes = [1.5, 3, 5, 8];
+  return {
+    white: sizes.map(s => createStarSprite(s, 1)),
+    blue: sizes.map(s => createStarSprite(s, 1, 220)),
+    warm: sizes.map(s => createStarSprite(s, 1, 30)),
+  };
+}
+
 function generateStars(w: number, h: number, count: number): Star[] {
   const stars: Star[] = [];
   for (let i = 0; i < count; i++) {
@@ -389,6 +429,7 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
   const rafRef = useRef<number>(0);
   const sizeRef = useRef({ w: 0, h: 0 });
   const prevSizeRef = useRef({ w: 0, h: 0 });
+  const spritesRef = useRef<StarSprites | null>(null);
 
   const phase = moonData?.phase ?? 0;
   const illumination = moonData?.illumination ?? 0;
@@ -419,31 +460,30 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
 
     drawMilkyWay(ctx, w, h);
 
-    for (const star of starsRef.current) {
-      const twinkle = Math.sin(frame * star.twinkleSpeed + star.twinkleOffset);
-      const alpha = star.brightness * (0.55 + 0.45 * twinkle);
-      const dx = star.x - cx;
-      const dy = star.y - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      let fade = 1;
-      if (dist < moonRadius * 1.5) fade = 0;
-      else if (dist < moonRadius * 2.5) fade = (dist - moonRadius * 1.5) / moonRadius;
-      const finalAlpha = alpha * fade;
-      if (finalAlpha < 0.01) continue;
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-      if (star.hue > 0 && star.r > 0.8) {
-        ctx.fillStyle = `hsla(${star.hue}, ${star.hue === 220 ? 60 : 50}%, 85%, ${finalAlpha})`;
-      } else {
-        ctx.fillStyle = `rgba(240, 238, 248, ${finalAlpha})`;
+    const sprites = spritesRef.current;
+    if (sprites) {
+      for (const star of starsRef.current) {
+        const twinkle = Math.sin(frame * star.twinkleSpeed + star.twinkleOffset);
+        const alpha = star.brightness * (0.55 + 0.45 * twinkle);
+        const dx = star.x - cx;
+        const dy = star.y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        let fade = 1;
+        if (dist < moonRadius * 1.5) fade = 0;
+        else if (dist < moonRadius * 2.5) fade = (dist - moonRadius * 1.5) / moonRadius;
+        const finalAlpha = alpha * fade;
+        if (finalAlpha < 0.01) continue;
+
+        // Pick sprite bucket based on star size
+        const bucket = star.r < 0.6 ? 0 : star.r < 1.2 ? 1 : star.r < 2 ? 2 : 3;
+        const spriteSet = star.hue === 220 ? sprites.blue : star.hue === 30 ? sprites.warm : sprites.white;
+        const sprite = spriteSet[bucket];
+        const spriteSize = sprite.width;
+
+        ctx.globalAlpha = finalAlpha;
+        ctx.drawImage(sprite, star.x - spriteSize / 2, star.y - spriteSize / 2);
       }
-      ctx.fill();
-      if (star.r > 1.5 && finalAlpha > 0.3) {
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.r * 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(240, 238, 248, ${finalAlpha * 0.08})`;
-        ctx.fill();
-      }
+      ctx.globalAlpha = 1;
     }
 
     shootingStarsRef.current = updateShootingStars(ctx, shootingStarsRef.current, w, h);
@@ -456,6 +496,12 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Create star sprites once
+    if (!spritesRef.current) {
+      spritesRef.current = createAllStarSprites();
+    }
+
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
