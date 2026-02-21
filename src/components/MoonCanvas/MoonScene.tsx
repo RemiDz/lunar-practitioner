@@ -1,8 +1,7 @@
 'use client';
 
-import { Suspense, useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { MOON_LIBRATION_SPEED, MOON_LIBRATION_AMPLITUDE } from '@/lib/motion-constants';
 
@@ -68,22 +67,38 @@ const terminatorFragmentShader = /* glsl */ `
 
 function MoonSphere({ phase }: { phase: number }) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const texture = useTexture('/textures/moon-surface.jpg');
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
 
-  const uniforms = useMemo(
-    () => ({
+  // Load texture manually (avoids drei/Suspense version issues)
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      '/textures/moon-surface.jpg',
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        setTexture(tex);
+      },
+      undefined,
+      (err) => console.error('[MoonScene] Texture load failed:', err)
+    );
+  }, []);
+
+  const uniforms = useMemo(() => {
+    if (!texture) return null;
+    return {
       uTexture: { value: texture },
       uPhase: { value: phase },
-    }),
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [texture]
-  );
+  }, [texture]);
 
-  // Update phase uniform every frame (uniforms object is stable)
+  // Update phase uniform every frame
   useFrame((_state) => {
     if (meshRef.current) {
       const mat = meshRef.current.material as THREE.ShaderMaterial;
-      mat.uniforms.uPhase.value = phase;
+      if (mat.uniforms?.uPhase) {
+        mat.uniforms.uPhase.value = phase;
+      }
 
       // Slow libration (Y axis wobble)
       const time = _state.clock.elapsedTime;
@@ -91,6 +106,9 @@ function MoonSphere({ phase }: { phase: number }) {
         Math.sin(time * MOON_LIBRATION_SPEED * 60) * MOON_LIBRATION_AMPLITUDE;
     }
   });
+
+  // Don't render until texture is loaded
+  if (!texture || !uniforms) return null;
 
   return (
     <mesh ref={meshRef}>
@@ -118,10 +136,14 @@ export default function MoonScene({ phase, diameter }: MoonSceneProps) {
       camera={{ position: [0, 0, 2.5], fov: 45 }}
       style={{ width: '100%', height: '100%' }}
       dpr={[1, 2]}
+      onCreated={({ gl }) => {
+        // Verify WebGL context is alive
+        if (!gl.getContext()) {
+          console.error('[MoonScene] WebGL context lost');
+        }
+      }}
     >
-      <Suspense fallback={null}>
-        <MoonSphere phase={phase} />
-      </Suspense>
+      <MoonSphere phase={phase} />
     </Canvas>
   );
 }
