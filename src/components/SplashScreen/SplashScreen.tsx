@@ -26,8 +26,11 @@ export default function SplashScreen({ isReady, onDismiss }: SplashScreenProps) 
   useEffect(() => {
     if (isReady && minTimeElapsed) {
       setVisible(false);
+      // Call onDismiss after exit animation completes
+      const timer = setTimeout(onDismiss, DURATION_SPLASH_EXIT * 1000 + 100);
+      return () => clearTimeout(timer);
     }
-  }, [isReady, minTimeElapsed]);
+  }, [isReady, minTimeElapsed, onDismiss]);
 
   return (
     <AnimatePresence>
@@ -42,12 +45,6 @@ export default function SplashScreen({ isReady, onDismiss }: SplashScreenProps) 
               duration: DURATION_SPLASH_EXIT,
               ease: [...EASE_LUNAR],
             },
-          }}
-          onAnimationComplete={(def) => {
-            // Only call onDismiss when the exit animation completes
-            if (typeof def === 'object' && 'opacity' in def && def.opacity === 0) {
-              onDismiss();
-            }
           }}
         >
           {/* Title */}
