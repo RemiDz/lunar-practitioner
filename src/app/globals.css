@@ -150,6 +150,91 @@ body {
 .card-stagger > *:nth-child(5) { animation-delay: 0.6s; }
 .card-stagger > *:nth-child(6) { animation-delay: 0.75s; }
 
+/* ── Settings Modal Styles ────────────── */
+
+.settings-input {
+  background: rgba(200, 196, 220, 0.05);
+  border: 1px solid rgba(200, 196, 220, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  color: #F0EEF8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: rgba(232, 201, 122, 0.3);
+  box-shadow: 0 0 12px rgba(232, 201, 122, 0.08);
+}
+
+.settings-input::placeholder {
+  color: rgba(200, 196, 220, 0.3);
+}
+
+.settings-toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(200, 196, 220, 0.1);
+  border: 1px solid rgba(200, 196, 220, 0.15);
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.settings-toggle.active {
+  background: rgba(232, 201, 122, 0.2);
+  border-color: rgba(232, 201, 122, 0.3);
+}
+
+.settings-toggle .knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #C8C4DC;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.settings-toggle.active .knob {
+  transform: translateX(20px);
+  background: #E8C97A;
+}
+
+.settings-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200, 196, 220, 0.08), transparent);
+  margin: 1.5rem 0;
+}
+
+.modal-enter {
+  animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-backdrop-enter {
+  animation: backdropFade 0.3s ease-out forwards;
+}
+
+@keyframes backdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* ── Shimmer loading animation ────────── */
 @keyframes shimmer {
   0% {
