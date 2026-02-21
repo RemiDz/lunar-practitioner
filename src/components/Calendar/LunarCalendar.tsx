@@ -1,10 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import type { CalendarDayData } from '@/hooks/useCalendarData';
-import { STAGGER_CALENDAR_DAY } from '@/lib/motion-constants';
 import CalendarDay from './CalendarDay';
 import DayDetailModal from './DayDetailModal';
 
@@ -34,12 +32,7 @@ export default function LunarCalendar({ latitude, longitude }: LunarCalendarProp
       {isLoading ? (
         <CalendarSkeleton />
       ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        >
+        <div className="glass-card p-4 md:p-6">
           {/* Weekday headers */}
           <div className="grid grid-cols-7 gap-1 mb-2 overflow-x-auto">
             {WEEKDAYS.map((d) => (
@@ -53,21 +46,7 @@ export default function LunarCalendar({ latitude, longitude }: LunarCalendarProp
           </div>
 
           {/* Calendar grid */}
-          <motion.div
-            className="grid grid-cols-7 gap-1"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-            variants={{
-              hidden: {},
-              visible: {
-                transition: {
-                  staggerChildren: STAGGER_CALENDAR_DAY,
-                  delayChildren: 0.1,
-                },
-              },
-            }}
-          >
+          <div className="grid grid-cols-7 gap-1">
             {/* Empty cells for offset */}
             {Array.from({ length: firstDayOffset }).map((_, i) => (
               <div key={`empty-${i}`} />
@@ -81,7 +60,7 @@ export default function LunarCalendar({ latitude, longitude }: LunarCalendarProp
                 onClick={() => setSelectedDay(day)}
               />
             ))}
-          </motion.div>
+          </div>
 
           {/* Legend */}
           <div className="flex items-center justify-center gap-6 mt-6 text-[10px] font-mono text-moonsilver/40">
@@ -98,7 +77,7 @@ export default function LunarCalendar({ latitude, longitude }: LunarCalendarProp
               Supermoon
             </span>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Day detail modal */}
@@ -109,17 +88,19 @@ export default function LunarCalendar({ latitude, longitude }: LunarCalendarProp
 
 function CalendarSkeleton() {
   return (
-    <div className="grid grid-cols-7 gap-1">
-      {Array.from({ length: 30 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex flex-col items-center gap-1 p-2 md:p-3 rounded-xl border border-moonsilver/5 animate-pulse"
-        >
-          <div className="h-2 w-8 bg-moonsilver/10 rounded" />
-          <div className="h-6 w-6 bg-moonsilver/10 rounded-full" />
-          <div className="h-2 w-6 bg-moonsilver/10 rounded" />
-        </div>
-      ))}
+    <div className="glass-card p-4 md:p-6">
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex flex-col items-center gap-1 p-2 md:p-3 rounded-xl border border-moonsilver/5 animate-pulse"
+          >
+            <div className="h-2 w-8 bg-moonsilver/10 rounded" />
+            <div className="h-6 w-6 bg-moonsilver/10 rounded-full" />
+            <div className="h-2 w-6 bg-moonsilver/10 rounded" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import type { CalendarDayData } from '@/hooks/useCalendarData';
 import { getPhaseColour } from '@/lib/colour-utils';
 import { ZODIAC_CONFIGS } from '@/data/zodiac';
@@ -11,47 +11,64 @@ interface DayDetailModalProps {
 }
 
 export default function DayDetailModal({ day, onClose }: DayDetailModalProps) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (day) {
+      // Trigger enter animation on next frame
+      requestAnimationFrame(() => setVisible(true));
+    } else {
+      setVisible(false);
+    }
+  }, [day]);
+
+  const handleClose = () => {
+    setVisible(false);
+    setTimeout(onClose, 300);
+  };
+
+  if (!day) return null;
+
   return (
-    <AnimatePresence>
-      {day && (
-        <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      style={{
+        opacity: visible ? 1 : 0,
+        transition: 'opacity 0.25s ease-out',
+      }}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{
+          background: 'rgba(6,6,26,0.8)',
+          opacity: visible ? 1 : 0,
+          transition: 'opacity 0.25s ease-out',
+        }}
+        onClick={handleClose}
+      />
+
+      {/* Modal */}
+      <div
+        className="glass-modal relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl p-6 md:p-8"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translateY(0) scale(1)' : 'translateY(24px) scale(0.97)',
+          transition: 'opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-4 right-4 text-moonsilver/50 hover:text-selenite-white transition-colors text-xl leading-none"
+          aria-label="Close"
         >
-          {/* Backdrop */}
-          <motion.div
-            className="absolute inset-0 bg-void-black/80 backdrop-blur-sm"
-            onClick={onClose}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          />
+          &times;
+        </button>
 
-          {/* Modal */}
-          <motion.div
-            className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto bg-[#0D0D25]/95 backdrop-blur-md border border-moonsilver/15 rounded-2xl p-6 md:p-8"
-            initial={{ opacity: 0, y: 24, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.97 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 text-moonsilver/50 hover:text-selenite-white transition-colors text-xl leading-none"
-              aria-label="Close"
-            >
-              &times;
-            </button>
-
-            <DayDetailContent day={day} />
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        <DayDetailContent day={day} />
+      </div>
+    </div>
   );
 }
 

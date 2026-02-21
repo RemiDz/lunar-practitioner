@@ -1,18 +1,8 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import type { CalendarDayData } from '@/hooks/useCalendarData';
 import type { ZodiacSignName } from '@/types/lunar';
 import { ZODIAC_CONFIGS } from '@/data/zodiac';
-
-const dayVariants = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
-  },
-};
 
 interface CalendarDayProps {
   day: CalendarDayData;
@@ -52,7 +42,7 @@ export default function CalendarDay({ day, onClick }: CalendarDayProps) {
   const todayClass = day.isToday ? 'border-lunar-gold/40' : 'border-moonsilver/10';
 
   return (
-    <motion.div variants={dayVariants}>
+    <div>
       <button
         onClick={onClick}
         className={`w-full flex flex-col items-center gap-1 p-2 md:p-3 rounded-xl border transition-colors hover:bg-moonsilver/5 cursor-pointer ${todayClass} ${ringClass}`}
@@ -73,6 +63,6 @@ export default function CalendarDay({ day, onClick }: CalendarDayProps) {
         {/* Zodiac symbol */}
         <span className="text-xs text-moonsilver/40">{zodiacSymbol}</span>
       </button>
-    </motion.div>
+    </div>
   );
 }

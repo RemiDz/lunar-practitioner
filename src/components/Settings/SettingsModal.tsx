@@ -125,30 +125,13 @@ export default function SettingsModal({
 
       {/* Modal panel */}
       <div
-        className="fixed inset-x-4 top-[10vh] bottom-[10vh] z-[101] mx-auto max-w-lg overflow-y-auto rounded-2xl modal-enter"
+        className="glass-modal fixed inset-x-4 top-[10vh] bottom-[10vh] z-[101] mx-auto max-w-lg overflow-y-auto rounded-2xl modal-enter"
         style={{
-          background: 'linear-gradient(135deg, rgba(240, 238, 248, 0.04) 0%, rgba(200, 196, 220, 0.07) 50%, rgba(240, 238, 248, 0.03) 100%)',
-          backdropFilter: 'blur(24px) saturate(1.3)',
-          WebkitBackdropFilter: 'blur(24px) saturate(1.3)',
-          border: '1px solid rgba(200, 196, 220, 0.1)',
-          boxShadow: '0 0 0 1px rgba(200, 196, 220, 0.05) inset, 0 24px 80px rgba(0, 0, 0, 0.6), 0 8px 32px rgba(0, 0, 0, 0.4)',
           opacity: visible ? 1 : 0,
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(24px) scale(0.97)',
           transition: 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        {/* Top edge highlight */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: '10%',
-            right: '10%',
-            height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(240, 238, 248, 0.2), transparent)',
-            pointerEvents: 'none',
-          }}
-        />
 
         {/* Modal content */}
         <div className="p-6 relative z-10">
