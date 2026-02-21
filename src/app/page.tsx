@@ -7,6 +7,7 @@ import { useAudio } from '@/hooks/useAudio';
 import { getLunarDistance } from '@/lib/moon-calculations';
 import { getPhaseDirection } from '@/lib/moon-calculations';
 import { ZODIAC_CONFIGS } from '@/data/zodiac';
+import { CosmicBackground } from '@/components/CosmicBackground';
 import { MoonCanvas } from '@/components/MoonCanvas';
 import { SessionPanel } from '@/components/SessionPanel';
 import { SettingsModal } from '@/components/Settings';
@@ -56,126 +57,134 @@ export default function Home() {
     : null;
 
   return (
-    <main className="min-h-screen cosmic-atmosphere text-selenite-white font-body">
-      {/* ── Zone 1: Live Indicator Bar ────────────── */}
-      <header
-        className="sticky top-0 z-50 backdrop-blur-md bg-void-black/70 border-b border-moonsilver/10"
-      >
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lunar-gold opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-lunar-gold" />
-            </span>
-            <span className="font-mono text-moonsilver text-xs tracking-wider uppercase">
-              Live
-            </span>
-          </div>
+    <>
+      {/* Full-viewport fixed starfield behind everything */}
+      <CosmicBackground />
 
-          {isLoading ? (
-            <span className="text-moonsilver/50 font-mono text-xs">
-              Calculating...
-            </span>
-          ) : (
-            <div className="flex items-center gap-4 text-xs font-mono">
-              {moonData && (
-                <>
-                  <span className="text-selenite-white truncate">
-                    {moonData.phaseDisplayName}
-                  </span>
-                  <span className="text-moonsilver hidden sm:inline">
-                    {moonData.illuminationPercent}
-                  </span>
-                </>
-              )}
-              {zodiacConfig && (
-                <span className="text-lunar-gold hidden sm:inline">
-                  {zodiacConfig.symbol} {zodiacConfig.name}
-                </span>
-              )}
+      {/* All content scrolls over the cosmic background */}
+      <main className="relative z-[1] min-h-screen text-selenite-white font-body">
+        {/* ── HUD Header ────────────────────────── */}
+        <header
+          className="sticky top-0 z-50 border-b border-moonsilver/[0.06]"
+          style={{
+            background: 'linear-gradient(180deg, rgba(6,6,26,0.9) 0%, rgba(6,6,26,0.5) 100%)',
+            backdropFilter: 'blur(16px) saturate(1.2)',
+            WebkitBackdropFilter: 'blur(16px) saturate(1.2)',
+          }}
+        >
+          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lunar-gold opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-lunar-gold" style={{ boxShadow: '0 0 8px rgba(232,201,122,0.5)' }} />
+              </span>
+              <span className="font-mono text-moonsilver/50 text-[11px] tracking-[0.15em] uppercase">
+                Live
+              </span>
             </div>
-          )}
 
-          <div className="flex items-center gap-2">
-            {audioEnabled && (
-              <AudioControls
-                isInitialised={audioInitialised}
-                isDroneActive={isDroneActive}
-                volume={volume}
-                onInit={initAudio}
-                onToggleDrone={toggleDrone}
-                onVolumeChange={(v) => {
-                  setVolume(v);
-                  setAudioVolume(v);
-                }}
-              />
+            {isLoading ? (
+              <span className="text-moonsilver/50 font-mono text-xs">
+                Calculating...
+              </span>
+            ) : (
+              <div className="flex items-center gap-4 text-xs font-mono">
+                {moonData && (
+                  <>
+                    <span className="text-selenite-white truncate">
+                      {moonData.phaseDisplayName}
+                    </span>
+                    <span className="text-moonsilver/50 hidden sm:inline">
+                      {moonData.illuminationPercent}
+                    </span>
+                  </>
+                )}
+                {zodiacConfig && (
+                  <span className="text-lunar-gold hidden sm:inline">
+                    {zodiacConfig.symbol} {zodiacConfig.name}
+                  </span>
+                )}
+              </div>
             )}
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="text-moonsilver/50 hover:text-selenite-white transition-colors p-2 flex-shrink-0"
-              aria-label="Settings"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
+
+            <div className="flex items-center gap-2">
+              {audioEnabled && (
+                <AudioControls
+                  isInitialised={audioInitialised}
+                  isDroneActive={isDroneActive}
+                  volume={volume}
+                  onInit={initAudio}
+                  onToggleDrone={toggleDrone}
+                  onVolumeChange={(v) => {
+                    setVolume(v);
+                    setAudioVolume(v);
+                  }}
+                />
+              )}
+              <button
+                onClick={() => setSettingsOpen(true)}
+                className="text-moonsilver/40 hover:text-selenite-white transition-colors p-2 flex-shrink-0"
+                aria-label="Settings"
+              >
+                <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* ── Zone 2: Moon Canvas ─────────────────── */}
-      <section
-        className="relative w-full"
-        style={{
-          height: '50vh',
-          minHeight: 360,
-          marginBottom: '-60px',
-          zIndex: 1,
-        }}
-      >
-        <MoonCanvas moonData={moonData} zodiacPosition={zodiacPosition} />
-      </section>
-
-      {/* ── Zone 3: Phase Identity ─────────────────── */}
-      <ScrollReveal>
-        <section className="max-w-2xl mx-auto px-6 py-10 text-center">
-          {error ? (
-            <ErrorDisplay
-              mode="inline"
-              error={error}
-              onRetry={() => window.location.reload()}
-            />
-          ) : isLoading ? (
-            <div className="space-y-3 animate-pulse">
-              <div className="h-8 w-48 bg-moonsilver/10 rounded mx-auto" />
-              <div className="h-4 w-64 bg-moonsilver/10 rounded mx-auto" />
+        {/* ── Moon Hero Section ─────────────────── */}
+        <section
+          className="relative w-full flex items-center justify-center"
+          style={{ height: '80vh', minHeight: 450 }}
+        >
+          <div className="relative" style={{ width: 'min(85vw, 420px)', height: 'min(85vw, 420px)' }}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <MoonCanvas moonData={moonData} zodiacPosition={zodiacPosition} />
             </div>
-          ) : intelligence && moonData ? (
-            <div className="space-y-4">
-              <h1 className="font-display text-4xl md:text-5xl font-light tracking-wide text-selenite-white">
-                {moonData.phaseDisplayName}
-              </h1>
-              <p className="font-display text-lg text-lunar-gold italic">
-                {intelligence.subtitle}
-              </p>
-              <p className="text-moonsilver/70 text-sm font-mono">
-                {getPhaseDirection(moonData.phase)}
-                {lunarDistance?.isSupermoon && ' · Supermoon'}
-                {lunarDistance?.isMicromoon && ' · Micromoon'}
-              </p>
-              <blockquote className="text-moonsilver text-base font-display italic leading-relaxed mt-6 px-4">
-                &ldquo;{intelligence.quote}&rdquo;
-              </blockquote>
-            </div>
-          ) : null}
+          </div>
         </section>
-      </ScrollReveal>
 
-      {/* ── Zone 4: Session Intelligence Panel ─────────── */}
-      <ScrollReveal delay={0.1}>
-        <section className="max-w-3xl mx-auto px-6 pb-16 cosmic-dust">
-          <div className="relative z-10">
+        {/* ── Phase Identity ────────────────────── */}
+        <ScrollReveal>
+          <section className="max-w-2xl mx-auto px-6 py-10 text-center" style={{ marginTop: -60 }}>
+            {error ? (
+              <ErrorDisplay
+                mode="inline"
+                error={error}
+                onRetry={() => window.location.reload()}
+              />
+            ) : isLoading ? (
+              <div className="space-y-3 animate-pulse">
+                <div className="h-8 w-48 bg-moonsilver/10 rounded mx-auto" />
+                <div className="h-4 w-64 bg-moonsilver/10 rounded mx-auto" />
+              </div>
+            ) : intelligence && moonData ? (
+              <div className="space-y-4">
+                <h1 className="font-display text-4xl md:text-5xl font-light tracking-[0.06em] text-selenite-white">
+                  {moonData.phaseDisplayName}
+                </h1>
+                <p className="font-display text-lg text-lunar-gold italic">
+                  {intelligence.subtitle}
+                </p>
+                <p className="text-moonsilver/40 text-xs font-mono tracking-[0.08em]">
+                  {getPhaseDirection(moonData.phase)}
+                  {lunarDistance?.isSupermoon && ' · Supermoon'}
+                  {lunarDistance?.isMicromoon && ' · Micromoon'}
+                </p>
+                <blockquote className="text-moonsilver/70 text-base font-display italic leading-relaxed mt-6 px-4">
+                  &ldquo;{intelligence.quote}&rdquo;
+                </blockquote>
+              </div>
+            ) : null}
+          </section>
+        </ScrollReveal>
+
+        {/* ── Session Intelligence Panel ────────── */}
+        <ScrollReveal delay={0.1}>
+          <section className="max-w-3xl mx-auto px-6 pb-16">
             <SessionPanel
               intelligence={intelligence}
               moonData={moonData}
@@ -186,43 +195,41 @@ export default function Home() {
               stopTone={audioEnabled ? stopTone : undefined}
               activeToneHz={activeToneHz}
             />
-          </div>
-        </section>
-      </ScrollReveal>
+          </section>
+        </ScrollReveal>
 
-      {/* ── Zone 5: Lunar Calendar ──────────────────── */}
-      <ScrollReveal delay={0.2}>
-        <section className="max-w-3xl mx-auto px-6 pb-20 cosmic-dust">
-          <div className="relative z-10">
+        {/* ── Lunar Calendar ───────────────────── */}
+        <ScrollReveal delay={0.2}>
+          <section className="max-w-3xl mx-auto px-6 pb-20">
             <LunarCalendar
               latitude={location.latitude}
               longitude={location.longitude}
             />
-          </div>
-        </section>
-      </ScrollReveal>
+          </section>
+        </ScrollReveal>
 
-      {/* ── Settings Modal ──────────────────────────── */}
-      <SettingsModal
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        locationOverride={locationOverride}
-        onLocationChange={setLocationOverride}
-        userInstruments={userInstruments}
-        onInstrumentsChange={setUserInstruments}
-        audioVolume={audioVolume}
-        onAudioVolumeChange={setAudioVolume}
-        audioEnabled={audioEnabled}
-        onAudioEnabledChange={setAudioEnabled}
-      />
-
-      {/* ── Share FAB ───────────────────────────────── */}
-      {intelligence && moonData && (
-        <SessionCardGenerator
-          intelligence={intelligence}
-          moonData={moonData}
+        {/* ── Settings Modal ───────────────────── */}
+        <SettingsModal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          locationOverride={locationOverride}
+          onLocationChange={setLocationOverride}
+          userInstruments={userInstruments}
+          onInstrumentsChange={setUserInstruments}
+          audioVolume={audioVolume}
+          onAudioVolumeChange={setAudioVolume}
+          audioEnabled={audioEnabled}
+          onAudioEnabledChange={setAudioEnabled}
         />
-      )}
-    </main>
+
+        {/* ── Share FAB ────────────────────────── */}
+        {intelligence && moonData && (
+          <SessionCardGenerator
+            intelligence={intelligence}
+            moonData={moonData}
+          />
+        )}
+      </main>
+    </>
   );
 }
