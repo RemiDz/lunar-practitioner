@@ -61,13 +61,14 @@ export default function Home() {
 
   return (
     <>
-      {/* ── Splash Screen ────────────────────────────── */}
+      {/* TEMPORARILY DISABLED - onDismiss not firing
       {!splashDismissed && (
         <SplashScreen
           isReady={dataReady}
           onDismiss={() => setSplashDismissed(true)}
         />
       )}
+      */}
 
       <main className="min-h-screen bg-void-black text-selenite-white font-body">
         {/* ── Zone 1: Live Indicator Bar ────────────── */}
