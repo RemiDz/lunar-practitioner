@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MOON_LIBRATION_SPEED, MOON_LIBRATION_AMPLITUDE } from '@/lib/motion-constants';
@@ -30,34 +30,23 @@ const terminatorFragmentShader = /* glsl */ `
     // Project 3D surface normal to 2D disk coordinates (as seen from camera)
     vec2 disk = vNormal.xy;
 
-    // Elliptical terminator model:
-    // k = cos(phase * 2π) controls the terminator's x-radius
-    // phase 0 (new):  k=1  → terminator at right limb → all dark
-    // phase 0.25 (Q1): k=0  → terminator at centre → right half lit
-    // phase 0.5 (full): k=-1 → terminator at left limb → all lit
+    // Elliptical terminator model
     float phaseAngle = uPhase * 6.283185;
     float k = cos(phaseAngle);
     float sinP = sin(phaseAngle);
 
-    // Limb x-radius at this y-height (circle cross-section)
     float limbX = sqrt(max(0.0, 1.0 - disk.y * disk.y));
-
-    // Terminator x-position traces an ellipse as y varies
     float termX = k * limbX;
 
-    // Signed distance from terminator (positive = lit side)
-    // sinP >= 0 for waxing (right side lit), < 0 for waning (left side lit)
     float dx = disk.x - termX;
     float signedDist = sinP >= 0.0 ? dx : -dx;
 
-    // Smooth shadow edge
     float shadow = smoothstep(-0.06, 0.06, signedDist);
 
-    // Limb darkening for 3D depth (brighter at centre, darker at edges)
+    // Limb darkening for 3D depth
     float depth = max(0.0, vNormal.z);
     float limbDarkening = mix(0.6, 1.0, pow(depth, 0.4));
 
-    // Earthshine: faint glow on the dark side
     float earthshine = 0.03;
     float light = max(shadow * limbDarkening, earthshine);
 
@@ -67,60 +56,69 @@ const terminatorFragmentShader = /* glsl */ `
 
 function MoonSphere({ phase }: { phase: number }) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const [texture, setTexture] = useState<THREE.Texture | null>(null);
-
-  // Load texture manually (avoids drei/Suspense version issues)
+  const matRef = useRef<THREE.ShaderMaterial | null>(null);
+  const [textureLoaded, setTextureLoaded] = useState(false);
+  // Load texture and build shader material imperatively
   useEffect(() => {
     const loader = new THREE.TextureLoader();
     loader.load(
       '/textures/moon-surface.jpg',
       (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
-        setTexture(tex);
+
+        const mat = new THREE.ShaderMaterial({
+          vertexShader: terminatorVertexShader,
+          fragmentShader: terminatorFragmentShader,
+          uniforms: {
+            uTexture: { value: tex },
+            uPhase: { value: phase },
+          },
+        });
+
+        matRef.current = mat;
+
+        if (meshRef.current) {
+          meshRef.current.material = mat;
+        }
+
+        setTextureLoaded(true);
       },
       undefined,
       (err) => console.error('[MoonScene] Texture load failed:', err)
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const uniforms = useMemo(() => {
-    if (!texture) return null;
-    return {
-      uTexture: { value: texture },
-      uPhase: { value: phase },
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [texture]);
-
-  // Update phase uniform every frame
   useFrame((_state) => {
-    if (meshRef.current) {
-      const mat = meshRef.current.material as THREE.ShaderMaterial;
-      if (mat.uniforms?.uPhase) {
-        mat.uniforms.uPhase.value = phase;
-      }
+    if (!meshRef.current) return;
 
-      // Slow libration (Y axis wobble)
-      const time = _state.clock.elapsedTime;
-      meshRef.current.rotation.y =
-        Math.sin(time * MOON_LIBRATION_SPEED * 60) * MOON_LIBRATION_AMPLITUDE;
+    // Update phase uniform
+    if (matRef.current?.uniforms?.uPhase) {
+      matRef.current.uniforms.uPhase.value = phase;
     }
+
+    // Slow libration (Y axis wobble)
+    const time = _state.clock.elapsedTime;
+    meshRef.current.rotation.y =
+      Math.sin(time * MOON_LIBRATION_SPEED * 60) * MOON_LIBRATION_AMPLITUDE;
   });
 
-  // Don't render until texture is loaded
-  if (!texture || !uniforms) return null;
-
+  // Always render the sphere — grey fallback until texture loads
   return (
     <mesh ref={meshRef}>
       <sphereGeometry args={[1, 64, 64]} />
-      <shaderMaterial
-        vertexShader={terminatorVertexShader}
-        fragmentShader={terminatorFragmentShader}
-        uniforms={uniforms}
-      />
+      {!textureLoaded && <meshBasicMaterial color="#2a2a3e" />}
     </mesh>
   );
 }
+
+// Preload texture so it's cached by the time MoonSphere mounts
+const preloadTexture = () => {
+  if (typeof window !== 'undefined') {
+    const img = new Image();
+    img.src = '/textures/moon-surface.jpg';
+  }
+};
 
 interface MoonSceneProps {
   phase: number;
@@ -136,11 +134,8 @@ export default function MoonScene({ phase, diameter }: MoonSceneProps) {
       camera={{ position: [0, 0, 2.5], fov: 45 }}
       style={{ width: '100%', height: '100%' }}
       dpr={[1, 2]}
-      onCreated={({ gl }) => {
-        // Verify WebGL context is alive
-        if (!gl.getContext()) {
-          console.error('[MoonScene] WebGL context lost');
-        }
+      onCreated={() => {
+        preloadTexture();
       }}
     >
       <MoonSphere phase={phase} />
