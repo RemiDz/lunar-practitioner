@@ -388,6 +388,7 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
   const frameRef = useRef(0);
   const rafRef = useRef<number>(0);
   const sizeRef = useRef({ w: 0, h: 0 });
+  const prevSizeRef = useRef({ w: 0, h: 0 });
 
   const phase = moonData?.phase ?? 0;
   const illumination = moonData?.illumination ?? 0;
@@ -458,14 +459,21 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
+      const w = rect.width;
+      const h = rect.height;
+
+      // Only regenerate stars if size actually changed significantly
+      if (Math.abs(w - prevSizeRef.current.w) < 5 && Math.abs(h - prevSizeRef.current.h) < 5) return;
+      prevSizeRef.current = { w, h };
+
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
       const ctx = canvas.getContext('2d');
       if (ctx) ctx.scale(dpr, dpr);
-      sizeRef.current = { w: rect.width, h: rect.height };
-      starsRef.current = generateStars(rect.width, rect.height, 1000);
+      sizeRef.current = { w, h };
+      starsRef.current = generateStars(w, h, 1000);
     };
     resize();
     window.addEventListener('resize', resize);
@@ -476,6 +484,58 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
   return (
     <div className="relative w-full h-full overflow-hidden" style={{ background: '#05050F' }}>
       <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+      {/* Bottom fade — blends into page content */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '120px',
+          background: 'linear-gradient(to top, #05050F 0%, transparent 100%)',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      />
+      {/* Top fade — blends into header */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '60px',
+          background: 'linear-gradient(to bottom, #05050F 0%, transparent 100%)',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      />
+      {/* Left edge fade */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: '40px',
+          background: 'linear-gradient(to right, #05050F 0%, transparent 100%)',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      />
+      {/* Right edge fade */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          right: 0,
+          width: '40px',
+          background: 'linear-gradient(to left, #05050F 0%, transparent 100%)',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      />
     </div>
   );
 }

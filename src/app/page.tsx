@@ -124,10 +124,15 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ── Zone 2: Moon Canvas (45vh) ────────────── */}
+      {/* ── Zone 2: Moon Canvas ─────────────────── */}
       <section
         className="relative w-full"
-        style={{ height: '45vh', minHeight: 320 }}
+        style={{
+          height: '50vh',
+          minHeight: 360,
+          marginBottom: '-60px',
+          zIndex: 1,
+        }}
       >
         <MoonCanvas moonData={moonData} zodiacPosition={zodiacPosition} />
       </section>
