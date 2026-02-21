@@ -5,6 +5,7 @@ import { getLunarDistance } from '@/lib/moon-calculations';
 import { getPhaseDirection } from '@/lib/moon-calculations';
 import { ZODIAC_CONFIGS } from '@/data/zodiac';
 import { MoonCanvas } from '@/components/MoonCanvas';
+import { SessionPanel } from '@/components/SessionPanel';
 
 export default function Home() {
   const { intelligence, moonData, zodiacPosition, isLoading } =
@@ -89,16 +90,14 @@ export default function Home() {
         ) : null}
       </section>
 
-      {/* ── Zone 4: Session Intelligence (Phase 3 placeholder) ─ */}
+      {/* ── Zone 4: Session Intelligence Panel ─────────── */}
       <section className="max-w-3xl mx-auto px-6 pb-16">
-        <div className="border border-moonsilver/10 rounded-lg p-8 text-center">
-          <p className="text-moonsilver/40 text-sm font-mono tracking-wider uppercase">
-            Session Intelligence Panel
-          </p>
-          <p className="text-moonsilver/25 text-xs mt-2 font-mono">
-            Coming in Phase 3
-          </p>
-        </div>
+        <SessionPanel
+          intelligence={intelligence}
+          moonData={moonData}
+          lunarDistance={lunarDistance}
+          isLoading={isLoading}
+        />
       </section>
     </main>
   );

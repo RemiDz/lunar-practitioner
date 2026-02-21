@@ -29,3 +29,8 @@ export const PHASE_ARC_STROKE_WIDTH = 2;
 // Halo
 export const HALO_BASE_RADIUS = 1.3; // multiplier of moon radius
 export const HALO_SUPERMOON_BOOST = 1.15;
+
+// Session Panel cards
+export const DURATION_CARD_ENTER = 0.8;
+export const STAGGER_CARD_DELAY = 0.12;
+export const EASE_CARD_ENTER = [0.16, 1, 0.3, 1] as const;
