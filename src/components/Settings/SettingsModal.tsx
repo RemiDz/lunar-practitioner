@@ -46,7 +46,6 @@ export default function SettingsModal({
 }: SettingsModalProps) {
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
-  const [visible, setVisible] = useState(false);
 
   // Sync local state with prop
   useEffect(() => {
@@ -58,18 +57,6 @@ export default function SettingsModal({
       setLng('');
     }
   }, [locationOverride]);
-
-  // Handle open/close animation
-  useEffect(() => {
-    if (isOpen) {
-      setVisible(true);
-    }
-  }, [isOpen]);
-
-  const handleClose = () => {
-    setVisible(false);
-    setTimeout(onClose, 300);
-  };
 
   const handleLocationSave = () => {
     const latNum = parseFloat(lat);
@@ -110,36 +97,44 @@ export default function SettingsModal({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — must be visible and clickable */}
       <div
-        className={`fixed inset-0 z-[100] modal-backdrop-enter`}
+        className="fixed inset-0 z-[100]"
         style={{
-          background: 'rgba(5, 5, 15, 0.8)',
+          background: 'rgba(6, 6, 26, 0.85)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
-          opacity: visible ? 1 : 0,
-          transition: 'opacity 0.3s ease-out',
         }}
-        onClick={handleClose}
+        onClick={onClose}
       />
 
       {/* Modal panel */}
       <div
-        className="glass-modal fixed inset-x-4 top-[10vh] bottom-[10vh] z-[101] mx-auto max-w-lg overflow-y-auto rounded-2xl modal-enter"
+        className="fixed z-[101] inset-x-4 top-[8vh] bottom-[8vh] mx-auto max-w-lg overflow-y-auto rounded-2xl"
         style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0) scale(1)' : 'translateY(24px) scale(0.97)',
-          transition: 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          background: 'linear-gradient(135deg, rgba(240,238,248,0.05) 0%, rgba(200,196,220,0.08) 50%, rgba(240,238,248,0.03) 100%)',
+          backdropFilter: 'blur(24px) saturate(1.3)',
+          WebkitBackdropFilter: 'blur(24px) saturate(1.3)',
+          border: '1px solid rgba(200,196,220,0.1)',
+          boxShadow: '0 0 0 1px rgba(200,196,220,0.05) inset, 0 24px 80px rgba(0,0,0,0.6), 0 8px 32px rgba(0,0,0,0.4)',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Top edge highlight */}
+        <div
+          style={{
+            position: 'absolute', top: 0, left: '10%', right: '10%', height: '1px',
+            background: 'linear-gradient(90deg, transparent, rgba(240,238,248,0.2), transparent)',
+            pointerEvents: 'none',
+          }}
+        />
 
-        {/* Modal content */}
-        <div className="p-6 relative z-10">
+        <div className="relative p-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h2 className="font-display text-xl text-selenite-white tracking-wide">Settings</h2>
             <button
-              onClick={handleClose}
+              onClick={onClose}
               className="text-moonsilver/50 hover:text-selenite-white transition-colors p-1"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
