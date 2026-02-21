@@ -34,3 +34,24 @@ export const HALO_SUPERMOON_BOOST = 1.15;
 export const DURATION_CARD_ENTER = 0.8;
 export const STAGGER_CARD_DELAY = 0.12;
 export const EASE_CARD_ENTER = [0.16, 1, 0.3, 1] as const;
+
+// Scroll reveal
+export const DURATION_SCROLL_REVEAL = 0.8;
+export const SCROLL_REVEAL_OFFSET = 24;
+
+// Splash screen
+export const SPLASH_MIN_DURATION = 2000; // ms
+export const DURATION_SPLASH_EXIT = 1.2;
+export const DURATION_CRESCENT_DRAW = 1.2;
+
+// Calendar stagger
+export const STAGGER_CALENDAR_DAY = 0.02;
+
+// Page enter
+export const DURATION_PAGE_ENTER = 1.0;
+export const STAGGER_PAGE_ZONE = 0.15;
+
+// Audio
+export const DRONE_FADE_DURATION = 3.0;
+export const TONE_FADE_DURATION = 0.8;
+export const TONE_PLAY_DURATION = 4.0;

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import type { CalendarDayData } from '@/hooks/useCalendarData';
+import { STAGGER_CALENDAR_DAY } from '@/lib/motion-constants';
 import CalendarDay from './CalendarDay';
 import DayDetailModal from './DayDetailModal';
 
@@ -52,7 +53,21 @@ export default function LunarCalendar({ latitude, longitude }: LunarCalendarProp
           </div>
 
           {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-1">
+          <motion.div
+            className="grid grid-cols-7 gap-1"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+            variants={{
+              hidden: {},
+              visible: {
+                transition: {
+                  staggerChildren: STAGGER_CALENDAR_DAY,
+                  delayChildren: 0.1,
+                },
+              },
+            }}
+          >
             {/* Empty cells for offset */}
             {Array.from({ length: firstDayOffset }).map((_, i) => (
               <div key={`empty-${i}`} />
@@ -66,7 +81,7 @@ export default function LunarCalendar({ latitude, longitude }: LunarCalendarProp
                 onClick={() => setSelectedDay(day)}
               />
             ))}
-          </div>
+          </motion.div>
 
           {/* Legend */}
           <div className="flex items-center justify-center gap-6 mt-6 text-[10px] font-mono text-moonsilver/40">

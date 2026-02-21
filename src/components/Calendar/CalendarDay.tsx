@@ -1,8 +1,18 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import type { CalendarDayData } from '@/hooks/useCalendarData';
 import type { ZodiacSignName } from '@/types/lunar';
 import { ZODIAC_CONFIGS } from '@/data/zodiac';
+
+const dayVariants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  },
+};
 
 interface CalendarDayProps {
   day: CalendarDayData;
@@ -42,25 +52,27 @@ export default function CalendarDay({ day, onClick }: CalendarDayProps) {
   const todayClass = day.isToday ? 'border-lunar-gold/40' : 'border-moonsilver/10';
 
   return (
-    <button
-      onClick={onClick}
-      className={`flex flex-col items-center gap-1 p-2 md:p-3 rounded-xl border transition-colors hover:bg-moonsilver/5 cursor-pointer ${todayClass} ${ringClass}`}
-    >
-      {/* Date */}
-      <span className="font-mono text-[10px] text-moonsilver/50">
-        {dayNum} {monthShort}
-      </span>
+    <motion.div variants={dayVariants}>
+      <button
+        onClick={onClick}
+        className={`w-full flex flex-col items-center gap-1 p-2 md:p-3 rounded-xl border transition-colors hover:bg-moonsilver/5 cursor-pointer ${todayClass} ${ringClass}`}
+      >
+        {/* Date */}
+        <span className="font-mono text-[10px] text-moonsilver/50">
+          {dayNum} {monthShort}
+        </span>
 
-      {/* Phase emoji */}
-      <span className="text-2xl leading-none">{emoji}</span>
+        {/* Phase emoji */}
+        <span className="text-2xl leading-none">{emoji}</span>
 
-      {/* Illumination */}
-      <span className="font-mono text-[10px] text-moonsilver/60">
-        {day.moonData.illuminationPercent}
-      </span>
+        {/* Illumination */}
+        <span className="font-mono text-[10px] text-moonsilver/60">
+          {day.moonData.illuminationPercent}
+        </span>
 
-      {/* Zodiac symbol */}
-      <span className="text-xs text-moonsilver/40">{zodiacSymbol}</span>
-    </button>
+        {/* Zodiac symbol */}
+        <span className="text-xs text-moonsilver/40">{zodiacSymbol}</span>
+      </button>
+    </motion.div>
   );
 }

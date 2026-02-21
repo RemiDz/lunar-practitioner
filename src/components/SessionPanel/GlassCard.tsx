@@ -58,10 +58,10 @@ export default function GlassCard({
       {/* Content or skeleton */}
       {skeleton ? (
         <div className="space-y-3">
-          <div className="h-5 w-3/4 bg-moonsilver/10 rounded animate-pulse" />
-          <div className="h-4 w-1/2 bg-moonsilver/10 rounded animate-pulse" />
-          <div className="h-4 w-2/3 bg-moonsilver/10 rounded animate-pulse" />
-          <div className="h-3 w-1/3 bg-moonsilver/10 rounded animate-pulse" />
+          <div className="h-5 w-3/4 rounded animate-shimmer" style={{ animationDelay: '0s' }} />
+          <div className="h-4 w-1/2 rounded animate-shimmer" style={{ animationDelay: '0.15s' }} />
+          <div className="h-4 w-2/3 rounded animate-shimmer" style={{ animationDelay: '0.3s' }} />
+          <div className="h-3 w-1/3 rounded animate-shimmer" style={{ animationDelay: '0.45s' }} />
         </div>
       ) : (
         children

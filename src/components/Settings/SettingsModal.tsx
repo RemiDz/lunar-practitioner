@@ -27,6 +27,10 @@ interface SettingsModalProps {
   onLocationChange: (loc: GeoLocation | null) => void;
   userInstruments: string[];
   onInstrumentsChange: (instruments: string[]) => void;
+  audioVolume?: number;
+  onAudioVolumeChange?: (v: number) => void;
+  audioEnabled?: boolean;
+  onAudioEnabledChange?: (enabled: boolean) => void;
 }
 
 export default function SettingsModal({
@@ -36,6 +40,10 @@ export default function SettingsModal({
   onLocationChange,
   userInstruments,
   onInstrumentsChange,
+  audioVolume = 0.3,
+  onAudioVolumeChange,
+  audioEnabled = true,
+  onAudioEnabledChange,
 }: SettingsModalProps) {
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
@@ -179,6 +187,52 @@ export default function SettingsModal({
                   Using manual: {locationOverride.label || `${locationOverride.latitude}, ${locationOverride.longitude}`}
                 </p>
               )}
+            </div>
+
+            {/* ── Audio Section ── */}
+            <div className="mb-8">
+              <p className="font-mono text-[10px] text-moonsilver/50 uppercase tracking-[0.2em] mb-3">
+                Audio
+              </p>
+
+              <div className="space-y-4">
+                {/* Enable/disable toggle */}
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-sm text-moonsilver/70">Enable audio</span>
+                  <button
+                    onClick={() => onAudioEnabledChange?.(!audioEnabled)}
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      audioEnabled ? 'bg-lunar-gold/30' : 'bg-moonsilver/15'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 w-4 h-4 rounded-full transition-all ${
+                        audioEnabled ? 'left-5 bg-lunar-gold' : 'left-0.5 bg-moonsilver/50'
+                      }`}
+                    />
+                  </button>
+                </label>
+
+                {/* Volume slider */}
+                <div>
+                  <label className="block text-xs text-moonsilver/60 mb-2">
+                    Volume: {Math.round(audioVolume * 100)}%
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={audioVolume}
+                    onChange={(e) => onAudioVolumeChange?.(parseFloat(e.target.value))}
+                    className="w-full h-1.5 accent-lunar-gold cursor-pointer"
+                  />
+                </div>
+
+                <p className="text-[10px] text-moonsilver/30">
+                  Ambient drone at 210.42 Hz (lunar planetary tone) and frequency previews.
+                </p>
+              </div>
             </div>
 
             {/* ── Instruments Section ── */}
