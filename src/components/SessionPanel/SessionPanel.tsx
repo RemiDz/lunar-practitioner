@@ -22,6 +22,7 @@ interface SessionPanelProps {
   moonData: MoonData | null;
   lunarDistance: LunarDistance | null;
   isLoading: boolean;
+  userInstruments?: string[];
 }
 
 const containerVariants = {
@@ -39,6 +40,7 @@ export default function SessionPanel({
   moonData,
   lunarDistance,
   isLoading,
+  userInstruments,
 }: SessionPanelProps) {
   if (isLoading || !intelligence || !moonData) {
     return (
@@ -87,6 +89,7 @@ export default function SessionPanel({
         sessionMood={intelligence.zodiac.sessionMood}
         instruments={intelligence.instruments}
         phaseColour={phaseColour}
+        userInstruments={userInstruments}
       />
 
       {/* Row 3 */}

@@ -11,6 +11,7 @@ interface ZodiacCardProps {
   sessionMood: string;
   instruments: string[];
   phaseColour: string;
+  userInstruments?: string[];
 }
 
 const ELEMENT_COLOURS: Record<string, string> = {
@@ -29,7 +30,9 @@ export default function ZodiacCard({
   sessionMood,
   instruments,
   phaseColour,
+  userInstruments = [],
 }: ZodiacCardProps) {
+  const hasUserProfile = userInstruments.length > 0;
   return (
     <GlassCard label="Zodiac Influence" accentColour={phaseColour} fullWidth>
       <div className="relative">
@@ -75,14 +78,24 @@ export default function ZodiacCard({
               Instruments
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {instruments.map((inst) => (
-                <span
-                  key={inst}
-                  className="px-2 py-0.5 rounded-full text-xs bg-moonsilver/5 text-moonsilver/70 border border-moonsilver/10"
-                >
-                  {inst}
-                </span>
-              ))}
+              {instruments.map((inst) => {
+                const isOwned = hasUserProfile && userInstruments.includes(inst);
+                const isDimmed = hasUserProfile && !userInstruments.includes(inst);
+                return (
+                  <span
+                    key={inst}
+                    className={`px-2 py-0.5 rounded-full text-xs border transition-colors ${
+                      isOwned
+                        ? 'bg-lunar-gold/15 text-lunar-gold border-lunar-gold/25'
+                        : isDimmed
+                        ? 'bg-moonsilver/3 text-moonsilver/30 border-moonsilver/5'
+                        : 'bg-moonsilver/5 text-moonsilver/70 border-moonsilver/10'
+                    }`}
+                  >
+                    {inst}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </div>
