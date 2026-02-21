@@ -8,423 +8,248 @@ interface MoonCanvasProps {
   zodiacPosition: ZodiacPosition | null;
 }
 
+// ── Types ──────────────────────────────────
 interface Star {
   x: number;
   y: number;
-  r: number;
+  size: number;       // sprite index (0=tiny, 1=small, 2=medium, 3=bright)
   brightness: number;
   twinkleOffset: number;
   twinkleSpeed: number;
-  hue: number;
 }
 
 interface ShootingStar {
-  x: number;
-  y: number;
-  dx: number;
-  dy: number;
-  life: number;
-  maxLife: number;
+  x: number; y: number;
+  dx: number; dy: number;
+  life: number; maxLife: number;
   length: number;
 }
 
-function createStarSprite(size: number, brightness: number, hue?: number): HTMLCanvasElement {
-  const c = document.createElement('canvas');
-  const s = Math.ceil(size * 2 + 4);
-  c.width = c.height = s;
-  const ctx = c.getContext('2d')!;
-  const cx = s / 2;
-  const grad = ctx.createRadialGradient(cx, cx, 0, cx, cx, size + 1);
-  if (hue !== undefined && hue > 0) {
-    const sat = hue === 220 ? 60 : 50;
-    grad.addColorStop(0, `hsla(${hue}, ${sat}%, 85%, ${brightness})`);
-    grad.addColorStop(0.3, `hsla(${hue}, ${sat}%, 85%, ${brightness * 0.5})`);
-    grad.addColorStop(0.7, `hsla(${hue}, ${sat}%, 85%, ${brightness * 0.1})`);
-    grad.addColorStop(1, 'transparent');
-  } else {
-    grad.addColorStop(0, `rgba(240, 238, 248, ${brightness})`);
-    grad.addColorStop(0.3, `rgba(240, 238, 248, ${brightness * 0.5})`);
-    grad.addColorStop(0.7, `rgba(240, 238, 248, ${brightness * 0.1})`);
-    grad.addColorStop(1, 'transparent');
-  }
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, s, s);
-  return c;
-}
-
-// Pre-rendered star sprites (keyed by size bucket)
-interface StarSprites {
-  white: HTMLCanvasElement[];
-  blue: HTMLCanvasElement[];
-  warm: HTMLCanvasElement[];
-}
-
-function createAllStarSprites(): StarSprites {
-  const sizes = [1.5, 3, 5, 8];
-  return {
-    white: sizes.map(s => createStarSprite(s, 1)),
-    blue: sizes.map(s => createStarSprite(s, 1, 220)),
-    warm: sizes.map(s => createStarSprite(s, 1, 30)),
+// ── Seeded random for deterministic star placement ──
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
   };
 }
 
-function generateStars(w: number, h: number, count: number): Star[] {
-  const stars: Star[] = [];
-  for (let i = 0; i < count; i++) {
-    stars.push({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() < 0.02 ? Math.random() * 2 + 1.5 : Math.random() * 1.2 + 0.2,
-      brightness: Math.random() * 0.7 + 0.3,
-      twinkleOffset: Math.random() * Math.PI * 2,
-      twinkleSpeed: 0.002 * (0.5 + Math.random()),
-      hue: Math.random() < 0.3 ? (Math.random() > 0.5 ? 220 : 30) : 0,
-    });
-  }
-  return stars;
-}
-
-function generateMoonTexture(size: number): HTMLCanvasElement {
-  const c = document.createElement('canvas');
-  c.width = size;
-  c.height = size;
-  const ctx = c.getContext('2d')!;
-  const imageData = ctx.createImageData(size, size);
-  const data = imageData.data;
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const idx = (y * size + x) * 4;
-      const dx = (x / size - 0.5) * 2;
-      const dy = (y / size - 0.5) * 2;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > 1) {
-        data[idx] = data[idx + 1] = data[idx + 2] = 0;
-        data[idx + 3] = 0;
-        continue;
-      }
-
-      const nz = Math.sqrt(1 - dist * dist);
-
-      // Multi-scale noise
-      let noise = 0;
-      const scales = [0.02, 0.05, 0.1, 0.2];
-      const weights = [0.4, 0.3, 0.2, 0.1];
-      for (let i = 0; i < scales.length; i++) {
-        noise += (Math.sin(x * scales[i] * 7.3 + y * scales[i] * 3.7) *
-                  Math.cos(x * scales[i] * 4.1 - y * scales[i] * 6.3) + 1) * 0.5 * weights[i];
-      }
-
-      // Limb darkening
-      const limbFactor = Math.pow(nz, 0.4);
-      const base = 140 + noise * 60;
-      const brightness = base * limbFactor;
-
-      // Slight colour variation (cooler at edges)
-      const r = Math.min(255, brightness * 0.95);
-      const g = Math.min(255, brightness * 0.93);
-      const b = Math.min(255, brightness);
-
-      data[idx] = r;
-      data[idx + 1] = g;
-      data[idx + 2] = b;
-      data[idx + 3] = 255;
-    }
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-  return c;
-}
-
-function drawMilkyWay(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
-  ctx.rotate(-0.35);
-  const grad = ctx.createLinearGradient(0, -h * 0.1, 0, h * 0.1);
-  grad.addColorStop(0, 'transparent');
-  grad.addColorStop(0.2, 'rgba(180, 176, 210, 0.015)');
-  grad.addColorStop(0.35, 'rgba(200, 196, 220, 0.04)');
-  grad.addColorStop(0.5, 'rgba(210, 206, 230, 0.06)');
-  grad.addColorStop(0.65, 'rgba(200, 196, 220, 0.04)');
-  grad.addColorStop(0.8, 'rgba(180, 176, 210, 0.015)');
-  grad.addColorStop(1, 'transparent');
-  ctx.fillStyle = grad;
-  ctx.fillRect(-w, -h * 0.1, w * 2, h * 0.2);
-  const grad2 = ctx.createLinearGradient(0, -h * 0.2, 0, h * 0.2);
-  grad2.addColorStop(0, 'transparent');
-  grad2.addColorStop(0.4, 'rgba(160, 150, 200, 0.012)');
-  grad2.addColorStop(0.6, 'rgba(160, 150, 200, 0.012)');
-  grad2.addColorStop(1, 'transparent');
-  ctx.fillStyle = grad2;
-  ctx.fillRect(-w, -h * 0.2, w * 2, h * 0.4);
-  ctx.restore();
-}
-
-function drawMoon(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  radius: number,
-  phase: number,
-  illumination: number,
-  frame: number,
-  moonTexture: HTMLCanvasElement | null
-) {
-  const r = radius;
-
-  // Breathing atmospheric glow
-  const breathe = Math.sin(frame * 0.008) * 0.08 + 0.92;
-  const glowLayers = [
-    { radius: 2.2, opacity: 0.012 * illumination * breathe },
-    { radius: 1.8, opacity: 0.025 * illumination * breathe },
-    { radius: 1.5, opacity: 0.05 * illumination * breathe },
-    { radius: 1.25, opacity: 0.08 * illumination * breathe },
-  ];
-  for (const layer of glowLayers) {
-    const glow = ctx.createRadialGradient(cx, cy, r * 0.5, cx, cy, r * layer.radius);
-    glow.addColorStop(0, `rgba(200, 196, 220, ${layer.opacity})`);
-    glow.addColorStop(0.4, `rgba(200, 196, 220, ${layer.opacity * 0.5})`);
-    glow.addColorStop(0.7, `rgba(180, 170, 210, ${layer.opacity * 0.2})`);
-    glow.addColorStop(1, 'transparent');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r * layer.radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Golden halo near full phases
-  if (illumination > 0.4) {
-    const goldIntensity = (illumination - 0.4) / 0.6;
-    const goldBreathe = Math.sin(frame * 0.006 + 1) * 0.1 + 0.9;
-    const goldGlow = ctx.createRadialGradient(cx, cy, r, cx, cy, r * 1.6);
-    goldGlow.addColorStop(0, `rgba(232, 201, 122, ${0.04 * goldIntensity * goldBreathe})`);
-    goldGlow.addColorStop(0.5, `rgba(232, 201, 122, ${0.015 * goldIntensity * goldBreathe})`);
-    goldGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = goldGlow;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r * 1.6, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Moon disk — use procedural texture if available
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.clip();
-
-  if (moonTexture) {
-    ctx.drawImage(moonTexture, cx - r, cy - r, r * 2, r * 2);
-  } else {
-    // Fallback flat gradient
-    const baseGrad = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.15, r * 0.05, cx + r * 0.1, cy + r * 0.05, r);
-    baseGrad.addColorStop(0, '#e0dce8');
-    baseGrad.addColorStop(0.35, '#b0acc0');
-    baseGrad.addColorStop(0.7, '#807a90');
-    baseGrad.addColorStop(1, '#504a60');
-    ctx.fillStyle = baseGrad;
-    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-  }
-
-  // Limb darkening
-  const vignette = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
-  vignette.addColorStop(0, 'rgba(0,0,0,0)');
-  vignette.addColorStop(0.6, 'rgba(0,0,0,0.03)');
-  vignette.addColorStop(0.8, 'rgba(0,0,0,0.12)');
-  vignette.addColorStop(0.95, 'rgba(0,0,0,0.35)');
-  vignette.addColorStop(1, 'rgba(0,0,0,0.5)');
-  ctx.fillStyle = vignette;
-  ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-  ctx.restore();
-
-  // Terminator with soft penumbra
-  const phaseAngle = phase * Math.PI * 2;
-  const k = Math.cos(phaseAngle);
-  const isWaxing = Math.sin(phaseAngle) >= 0;
-  const steps = 80;
-
-  for (let pass = 0; pass < 3; pass++) {
-    const penumbraK = k + (isWaxing ? -1 : 1) * (0.04 - pass * 0.015);
-    const penumbraAlpha = 0.15 + pass * 0.25;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.beginPath();
-    if (isWaxing) {
-      ctx.moveTo(cx, cy - r);
-      ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2, true);
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const angle = Math.PI / 2 - t * Math.PI;
-        ctx.lineTo(cx + penumbraK * r * Math.cos(angle), cy + r * Math.sin(angle));
-      }
-    } else {
-      ctx.moveTo(cx, cy - r);
-      ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2, false);
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const angle = Math.PI / 2 - t * Math.PI;
-        ctx.lineTo(cx + penumbraK * r * Math.cos(angle), cy + r * Math.sin(angle));
-      }
-    }
-    ctx.closePath();
-    ctx.fillStyle = `rgba(5, 5, 15, ${penumbraAlpha})`;
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Main shadow
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.beginPath();
-  if (isWaxing) {
-    ctx.moveTo(cx, cy - r);
-    ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2, true);
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const angle = Math.PI / 2 - t * Math.PI;
-      ctx.lineTo(cx + k * r * Math.cos(angle), cy + r * Math.sin(angle));
-    }
-  } else {
-    ctx.moveTo(cx, cy - r);
-    ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2, false);
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const angle = Math.PI / 2 - t * Math.PI;
-      ctx.lineTo(cx + k * r * Math.cos(angle), cy + r * Math.sin(angle));
-    }
-  }
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(5, 5, 15, 0.96)';
-  ctx.fill();
-  ctx.restore();
-
-  // Earthshine on dark side
-  if (illumination < 0.5) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
-    ctx.clip();
-    const esX = isWaxing ? cx - r * 0.5 : cx + r * 0.5;
-    const earthshine = ctx.createRadialGradient(esX, cy, r * 0.3, cx, cy, r);
-    const esI = (0.5 - illumination) * 0.04;
-    earthshine.addColorStop(0, `rgba(140, 160, 200, ${esI})`);
-    earthshine.addColorStop(0.5, `rgba(100, 120, 160, ${esI * 0.3})`);
-    earthshine.addColorStop(1, 'transparent');
-    ctx.fillStyle = earthshine;
-    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-    ctx.restore();
-  }
-
-  // Bright limb edge
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.strokeStyle = `rgba(240, 238, 248, ${0.15 * illumination})`;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawPhaseArc(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  moonRadius: number,
-  phase: number,
-  illumination: number,
-  frame: number
-) {
-  const arcRadius = moonRadius * 1.18;
-  const startAngle = -Math.PI / 2;
-  const endAngle = startAngle + Math.PI * 2 * phase;
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, arcRadius, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(200, 196, 220, 0.06)';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  if (phase > 0.001) {
-    ctx.beginPath();
-    ctx.arc(cx, cy, arcRadius, startAngle, endAngle);
-    ctx.strokeStyle = `rgba(200, 196, 220, ${0.08 + illumination * 0.08})`;
-    ctx.lineWidth = 5;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, arcRadius, startAngle, endAngle);
-    ctx.strokeStyle = `rgba(232, 228, 244, ${0.3 + illumination * 0.3})`;
-    ctx.lineWidth = 1.5;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-
-    const dotX = cx + arcRadius * Math.cos(endAngle);
-    const dotY = cy + arcRadius * Math.sin(endAngle);
-    const dotPulse = Math.sin(frame * 0.03) * 0.3 + 0.7;
-    ctx.beginPath();
-    ctx.arc(dotX, dotY, 3, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(232, 201, 122, ${0.6 * dotPulse})`;
-    ctx.fill();
-  }
-}
-
-function updateShootingStars(ctx: CanvasRenderingContext2D, ss: ShootingStar[], w: number, h: number): ShootingStar[] {
-  if (Math.random() < 0.001) {
-    const angle = Math.random() * Math.PI * 0.4 + Math.PI * 0.3;
-    const speed = 5 + Math.random() * 5;
-    ss.push({
-      x: Math.random() * w * 0.8 + w * 0.1,
-      y: Math.random() * h * 0.4,
-      dx: Math.cos(angle) * speed,
-      dy: Math.sin(angle) * speed,
-      life: 0,
-      maxLife: 90 + Math.random() * 40,
-      length: 40 + Math.random() * 60,
-    });
-  }
-  return ss.filter((s) => {
-    s.x += s.dx;
-    s.y += s.dy;
-    s.life++;
-    const progress = s.life / s.maxLife;
-    const alpha = Math.min(progress * 5, 1) * Math.max(1 - (progress - 0.6) / 0.4, 0) * 0.7;
-    if (alpha < 0.01) return false;
-    const norm = Math.sqrt(s.dx * s.dx + s.dy * s.dy);
-    const tailLen = s.length * (1 - progress * 0.3);
-    const tailX = s.x - (s.dx / norm) * tailLen;
-    const tailY = s.y - (s.dy / norm) * tailLen;
-    const grad = ctx.createLinearGradient(tailX, tailY, s.x, s.y);
-    grad.addColorStop(0, 'transparent');
-    grad.addColorStop(0.7, `rgba(220, 218, 240, ${alpha * 0.5})`);
-    grad.addColorStop(1, `rgba(240, 238, 248, ${alpha})`);
-    ctx.beginPath();
-    ctx.moveTo(tailX, tailY);
-    ctx.lineTo(s.x, s.y);
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, 1.5, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(240, 238, 248, ${alpha})`;
-    ctx.fill();
-    return s.life < s.maxLife;
+// ── Pre-render soft star sprites (4 sizes) ──
+function createStarSprites(): HTMLCanvasElement[] {
+  const sizes = [3, 5, 8, 12]; // pixel diameters
+  return sizes.map((d) => {
+    const c = document.createElement('canvas');
+    c.width = c.height = d * 2;
+    const ctx = c.getContext('2d')!;
+    const cx = d, cy = d, r = d * 0.8;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    grad.addColorStop(0, 'rgba(240, 238, 248, 1)');
+    grad.addColorStop(0.15, 'rgba(240, 238, 248, 0.7)');
+    grad.addColorStop(0.4, 'rgba(230, 228, 244, 0.25)');
+    grad.addColorStop(0.7, 'rgba(220, 218, 240, 0.06)');
+    grad.addColorStop(1, 'rgba(220, 218, 240, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, d * 2, d * 2);
+    return c;
   });
 }
 
+// ── Pre-render moon surface texture (offscreen) ──
+function createMoonTexture(texSize: number): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  c.width = c.height = texSize;
+  const ctx = c.getContext('2d')!;
+  const cx = texSize / 2, cy = texSize / 2, r = texSize / 2;
+
+  // 1. Base sphere gradient — warm centre, cooler edges
+  const base = ctx.createRadialGradient(cx - r * 0.15, cy - r * 0.1, r * 0.05, cx, cy, r);
+  base.addColorStop(0, '#d8d4e4');
+  base.addColorStop(0.2, '#c8c4d4');
+  base.addColorStop(0.45, '#aba7b8');
+  base.addColorStop(0.65, '#908c9c');
+  base.addColorStop(0.82, '#706c7c');
+  base.addColorStop(0.95, '#504c5c');
+  base.addColorStop(1, '#383440');
+  ctx.fillStyle = base;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Maria — the recognizable dark "seas" of the moon
+  // Painted as soft ellipses with multiple layers for natural edges
+  const maria = [
+    // Mare Imbrium — large, upper left
+    { x: 0.34, y: 0.30, rx: 0.14, ry: 0.12, rot: -0.15, a: 0.18 },
+    { x: 0.32, y: 0.28, rx: 0.10, ry: 0.09, rot: -0.1, a: 0.08 },
+    // Oceanus Procellarum — large, left side
+    { x: 0.26, y: 0.48, rx: 0.13, ry: 0.20, rot: -0.08, a: 0.14 },
+    { x: 0.24, y: 0.52, rx: 0.09, ry: 0.14, rot: 0, a: 0.06 },
+    // Mare Serenitatis — upper centre-right
+    { x: 0.53, y: 0.30, rx: 0.08, ry: 0.09, rot: 0.1, a: 0.16 },
+    // Mare Tranquillitatis — centre-right
+    { x: 0.57, y: 0.43, rx: 0.10, ry: 0.09, rot: 0.25, a: 0.15 },
+    { x: 0.55, y: 0.45, rx: 0.07, ry: 0.06, rot: 0.2, a: 0.06 },
+    // Mare Crisium — isolated right
+    { x: 0.72, y: 0.33, rx: 0.05, ry: 0.065, rot: 0.3, a: 0.18 },
+    // Mare Nubium — lower centre
+    { x: 0.40, y: 0.62, rx: 0.09, ry: 0.07, rot: 0.05, a: 0.12 },
+    // Mare Fecunditatis — lower right
+    { x: 0.64, y: 0.56, rx: 0.07, ry: 0.06, rot: 0.15, a: 0.10 },
+    // Mare Humorum — small, lower left
+    { x: 0.30, y: 0.68, rx: 0.05, ry: 0.05, rot: 0, a: 0.12 },
+    // Mare Frigoris — thin strip, top
+    { x: 0.42, y: 0.16, rx: 0.18, ry: 0.03, rot: -0.05, a: 0.07 },
+  ];
+
+  for (const m of maria) {
+    ctx.save();
+    const mx = cx - r + m.x * 2 * r;
+    const my = cy - r + m.y * 2 * r;
+    ctx.translate(mx, my);
+    ctx.rotate(m.rot);
+    const maxR = Math.max(m.rx, m.ry) * r * 1.3;
+    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, maxR);
+    grad.addColorStop(0, `rgba(22, 18, 38, ${m.a})`);
+    grad.addColorStop(0.4, `rgba(22, 18, 38, ${m.a * 0.7})`);
+    grad.addColorStop(0.7, `rgba(22, 18, 38, ${m.a * 0.3})`);
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, m.rx * r * 1.3, m.ry * r * 1.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 3. Surface variation — hundreds of tiny soft spots for micro-texture
+  // NOT sine waves — use seeded random positions
+  const rng = seededRandom(42);
+  for (let i = 0; i < 600; i++) {
+    const angle = rng() * Math.PI * 2;
+    const dist = rng() * r * 0.92;
+    const sx = cx + Math.cos(angle) * dist;
+    const sy = cy + Math.sin(angle) * dist;
+    const sr = 2 + rng() * 8;
+    const dark = rng() > 0.5;
+    const opacity = 0.02 + rng() * 0.04;
+
+    const spotGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+    if (dark) {
+      spotGrad.addColorStop(0, `rgba(15, 12, 30, ${opacity})`);
+    } else {
+      spotGrad.addColorStop(0, `rgba(220, 216, 235, ${opacity * 0.6})`);
+    }
+    spotGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = spotGrad;
+    ctx.beginPath();
+    ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 4. Notable craters — bright rings with dark centres
+  const craters = [
+    { x: 0.42, y: 0.78, s: 0.02 },  // Tycho
+    { x: 0.35, y: 0.20, s: 0.015 },  // Copernicus
+    { x: 0.58, y: 0.14, s: 0.012 },  // Aristoteles
+    { x: 0.68, y: 0.65, s: 0.01 },
+    { x: 0.22, y: 0.38, s: 0.013 },
+    { x: 0.50, y: 0.52, s: 0.008 },
+  ];
+
+  for (const cr of craters) {
+    const crx = cx - r + cr.x * 2 * r;
+    const cry = cy - r + cr.y * 2 * r;
+    const crr = cr.s * r * 2;
+    // Dark centre
+    const cGrad = ctx.createRadialGradient(crx, cry, 0, crx, cry, crr);
+    cGrad.addColorStop(0, 'rgba(15, 12, 30, 0.12)');
+    cGrad.addColorStop(0.5, 'rgba(15, 12, 30, 0.06)');
+    cGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = cGrad;
+    ctx.beginPath();
+    ctx.arc(crx, cry, crr, 0, Math.PI * 2);
+    ctx.fill();
+    // Bright rim (upper-left lit)
+    const rimGrad = ctx.createRadialGradient(crx - crr * 0.3, cry - crr * 0.3, crr * 0.6, crx, cry, crr * 1.2);
+    rimGrad.addColorStop(0, 'rgba(210, 206, 225, 0.06)');
+    rimGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = rimGrad;
+    ctx.beginPath();
+    ctx.arc(crx, cry, crr * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 5. Limb darkening — vignette that makes edges dark like a real sphere
+  const vignette = ctx.createRadialGradient(cx, cy, r * 0.15, cx, cy, r);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(0.55, 'rgba(0,0,0,0)');
+  vignette.addColorStop(0.75, 'rgba(0,0,0,0.08)');
+  vignette.addColorStop(0.88, 'rgba(0,0,0,0.25)');
+  vignette.addColorStop(0.96, 'rgba(0,0,0,0.45)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.6)');
+  ctx.fillStyle = vignette;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  return c;
+}
+
+// ── Star generation (deterministic) ──
+function generateStars(w: number, h: number): Star[] {
+  const rng = seededRandom(12345);
+  const stars: Star[] = [];
+
+  // Far layer — many tiny dim stars
+  for (let i = 0; i < 700; i++) {
+    stars.push({
+      x: rng() * w, y: rng() * h,
+      size: 0, brightness: 0.15 + rng() * 0.25,
+      twinkleOffset: rng() * Math.PI * 2,
+      twinkleSpeed: 0.001 + rng() * 0.001,
+    });
+  }
+  // Mid layer — moderate
+  for (let i = 0; i < 200; i++) {
+    stars.push({
+      x: rng() * w, y: rng() * h,
+      size: 1, brightness: 0.25 + rng() * 0.35,
+      twinkleOffset: rng() * Math.PI * 2,
+      twinkleSpeed: 0.0015 + rng() * 0.0015,
+    });
+  }
+  // Near layer — few bright stars
+  for (let i = 0; i < 40; i++) {
+    stars.push({
+      x: rng() * w, y: rng() * h,
+      size: 2, brightness: 0.4 + rng() * 0.4,
+      twinkleOffset: rng() * Math.PI * 2,
+      twinkleSpeed: 0.002 + rng() * 0.002,
+    });
+  }
+  // Rare bright stars
+  for (let i = 0; i < 8; i++) {
+    stars.push({
+      x: rng() * w, y: rng() * h,
+      size: 3, brightness: 0.6 + rng() * 0.4,
+      twinkleOffset: rng() * Math.PI * 2,
+      twinkleSpeed: 0.003 + rng() * 0.001,
+    });
+  }
+
+  return stars;
+}
+
+// ── Main Component ─────────────────────────
 export default function MoonCanvas({ moonData }: MoonCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const starsRef = useRef<Star[]>([]);
   const shootingStarsRef = useRef<ShootingStar[]>([]);
+  const spritesRef = useRef<HTMLCanvasElement[]>([]);
+  const moonTexRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef(0);
   const rafRef = useRef<number>(0);
   const sizeRef = useRef({ w: 0, h: 0 });
   const prevSizeRef = useRef({ w: 0, h: 0 });
-  const spritesRef = useRef<StarSprites | null>(null);
-  const moonTextureRef = useRef<HTMLCanvasElement | null>(null);
 
   const phase = moonData?.phase ?? 0;
   const illumination = moonData?.illumination ?? 0;
@@ -438,76 +263,279 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
     if (w === 0 || h === 0) { rafRef.current = requestAnimationFrame(draw); return; }
 
     const frame = frameRef.current++;
+    const sprites = spritesRef.current;
+    const moonTex = moonTexRef.current;
+
+    // ── Clear with void ──
     ctx.fillStyle = '#05050F';
     ctx.fillRect(0, 0, w, h);
 
-    const spaceGrad = ctx.createRadialGradient(w / 2, h * 0.45, 0, w / 2, h * 0.45, Math.max(w, h) * 0.8);
-    spaceGrad.addColorStop(0, 'rgba(15, 12, 35, 0.4)');
-    spaceGrad.addColorStop(0.3, 'rgba(10, 10, 30, 0.2)');
+    // ── Deep space atmosphere ──
+    const spaceGrad = ctx.createRadialGradient(w * 0.5, h * 0.42, 0, w * 0.5, h * 0.42, Math.max(w, h) * 0.9);
+    spaceGrad.addColorStop(0, 'rgba(18, 14, 42, 0.35)');
+    spaceGrad.addColorStop(0.25, 'rgba(12, 10, 32, 0.2)');
+    spaceGrad.addColorStop(0.5, 'rgba(8, 8, 22, 0.1)');
     spaceGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = spaceGrad;
     ctx.fillRect(0, 0, w, h);
 
+    // ── Subtle nebula wisps ──
+    ctx.save();
+    ctx.globalAlpha = 0.025;
+    ctx.translate(w * 0.7, h * 0.3);
+    ctx.rotate(-0.5);
+    const neb1 = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.3);
+    neb1.addColorStop(0, 'rgba(60, 40, 100, 1)');
+    neb1.addColorStop(0.5, 'rgba(40, 30, 80, 0.5)');
+    neb1.addColorStop(1, 'transparent');
+    ctx.fillStyle = neb1;
+    ctx.fillRect(-w * 0.3, -w * 0.3, w * 0.6, w * 0.6);
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = 0.015;
+    ctx.translate(w * 0.2, h * 0.7);
+    const neb2 = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.25);
+    neb2.addColorStop(0, 'rgba(30, 40, 80, 1)');
+    neb2.addColorStop(1, 'transparent');
+    ctx.fillStyle = neb2;
+    ctx.fillRect(-w * 0.25, -w * 0.25, w * 0.5, w * 0.5);
+    ctx.restore();
+
+    // ── Moon calculations ──
     const minDim = Math.min(w, h);
     const moonRadius = minDim * 0.26;
     const cx = w / 2;
-    const cy = h * 0.45;
+    const cy = h * 0.44;
 
-    drawMilkyWay(ctx, w, h);
+    // ── Stars ──
+    for (const star of starsRef.current) {
+      // Proximity fade around moon
+      const dx = star.x - cx;
+      const dy = star.y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      let fade = 1;
+      if (dist < moonRadius * 1.6) fade = 0;
+      else if (dist < moonRadius * 2.8) fade = (dist - moonRadius * 1.6) / (moonRadius * 1.2);
 
-    const sprites = spritesRef.current;
-    if (sprites) {
-      for (const star of starsRef.current) {
-        const twinkle = Math.sin(frame * star.twinkleSpeed + star.twinkleOffset);
-        const alpha = star.brightness * (0.55 + 0.45 * twinkle);
-        const dx = star.x - cx;
-        const dy = star.y - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        let fade = 1;
-        if (dist < moonRadius * 1.5) fade = 0;
-        else if (dist < moonRadius * 2.5) fade = (dist - moonRadius * 1.5) / moonRadius;
-        const finalAlpha = alpha * fade;
-        if (finalAlpha < 0.01) continue;
+      // Twinkle
+      const twinkle = Math.sin(frame * star.twinkleSpeed + star.twinkleOffset);
+      const alpha = star.brightness * (0.5 + 0.5 * twinkle) * fade;
+      if (alpha < 0.01) continue;
 
-        // Pick sprite bucket based on star size
-        const bucket = star.r < 0.6 ? 0 : star.r < 1.2 ? 1 : star.r < 2 ? 2 : 3;
-        const spriteSet = star.hue === 220 ? sprites.blue : star.hue === 30 ? sprites.warm : sprites.white;
-        const sprite = spriteSet[bucket];
-        const spriteSize = sprite.width;
+      const sprite = sprites[star.size];
+      if (!sprite) continue;
 
-        ctx.globalAlpha = finalAlpha;
-        ctx.drawImage(sprite, star.x - spriteSize / 2, star.y - spriteSize / 2);
-      }
-      ctx.globalAlpha = 1;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      const spriteW = sprite.width;
+      ctx.drawImage(sprite, star.x - spriteW / 2, star.y - spriteW / 2);
+      ctx.restore();
     }
 
-    shootingStarsRef.current = updateShootingStars(ctx, shootingStarsRef.current, w, h);
-    drawMoon(ctx, cx, cy, moonRadius, phase, illumination, frame, moonTextureRef.current);
-    drawPhaseArc(ctx, cx, cy, moonRadius, phase, illumination, frame);
+    // ── Shooting stars ──
+    if (Math.random() < 0.0005) {
+      const angle = Math.random() * Math.PI * 0.3 + Math.PI * 0.35;
+      const speed = 4 + Math.random() * 4;
+      shootingStarsRef.current.push({
+        x: Math.random() * w * 0.7 + w * 0.15,
+        y: Math.random() * h * 0.35,
+        dx: Math.cos(angle) * speed,
+        dy: Math.sin(angle) * speed,
+        life: 0, maxLife: 80 + Math.random() * 50,
+        length: 50 + Math.random() * 70,
+      });
+    }
+    shootingStarsRef.current = shootingStarsRef.current.filter((s) => {
+      s.x += s.dx; s.y += s.dy; s.life++;
+      const p = s.life / s.maxLife;
+      const alpha = Math.min(p * 6, 1) * Math.max(1 - (p - 0.5) / 0.5, 0) * 0.6;
+      if (alpha < 0.005) return false;
+      const norm = Math.sqrt(s.dx * s.dx + s.dy * s.dy);
+      const tailLen = s.length * (1 - p * 0.4);
+      const tx = s.x - (s.dx / norm) * tailLen;
+      const ty = s.y - (s.dy / norm) * tailLen;
+      const grad = ctx.createLinearGradient(tx, ty, s.x, s.y);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(0.6, `rgba(210, 208, 235, ${alpha * 0.3})`);
+      grad.addColorStop(0.9, `rgba(240, 238, 248, ${alpha * 0.7})`);
+      grad.addColorStop(1, `rgba(240, 238, 248, ${alpha})`);
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(s.x, s.y);
+      ctx.strokeStyle = grad; ctx.lineWidth = 1; ctx.stroke();
+      return s.life < s.maxLife;
+    });
+
+    // ── Atmospheric glow (breathing) ──
+    const breathe = Math.sin(frame * 0.006) * 0.06 + 0.94;
+    const glowLayers = [
+      { r: 2.5, o: 0.008 }, { r: 2.0, o: 0.018 },
+      { r: 1.6, o: 0.035 }, { r: 1.3, o: 0.06 },
+    ];
+    for (const g of glowLayers) {
+      const glow = ctx.createRadialGradient(cx, cy, moonRadius * 0.3, cx, cy, moonRadius * g.r);
+      const op = g.o * illumination * breathe;
+      glow.addColorStop(0, `rgba(200, 196, 220, ${op})`);
+      glow.addColorStop(0.5, `rgba(190, 185, 215, ${op * 0.4})`);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(cx, cy, moonRadius * g.r, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Golden warmth near full
+    if (illumination > 0.35) {
+      const gi = (illumination - 0.35) / 0.65;
+      const gb = Math.sin(frame * 0.005 + 0.7) * 0.08 + 0.92;
+      const gold = ctx.createRadialGradient(cx, cy, moonRadius * 0.8, cx, cy, moonRadius * 1.8);
+      gold.addColorStop(0, `rgba(232, 201, 122, ${0.03 * gi * gb})`);
+      gold.addColorStop(0.6, `rgba(232, 201, 122, ${0.01 * gi * gb})`);
+      gold.addColorStop(1, 'transparent');
+      ctx.fillStyle = gold;
+      ctx.beginPath(); ctx.arc(cx, cy, moonRadius * 1.8, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ── Draw moon from pre-rendered texture ──
+    if (moonTex) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, moonRadius, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(moonTex, cx - moonRadius, cy - moonRadius, moonRadius * 2, moonRadius * 2);
+      ctx.restore();
+    }
+
+    // ── Terminator shadow ──
+    const phaseAngle = phase * Math.PI * 2;
+    const k = Math.cos(phaseAngle);
+    const isWaxing = Math.sin(phaseAngle) >= 0;
+    const steps = 90;
+
+    // Soft penumbra passes
+    const penumbraPasses = [
+      { offset: 0.06, alpha: 0.10 },
+      { offset: 0.04, alpha: 0.20 },
+      { offset: 0.02, alpha: 0.35 },
+      { offset: 0.008, alpha: 0.55 },
+    ];
+
+    for (const pp of penumbraPasses) {
+      const pk = k + (isWaxing ? -1 : 1) * pp.offset;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, cy, moonRadius, 0, Math.PI * 2); ctx.clip();
+      ctx.beginPath();
+      if (isWaxing) {
+        ctx.moveTo(cx, cy - moonRadius);
+        ctx.arc(cx, cy, moonRadius, -Math.PI / 2, Math.PI / 2, true);
+        for (let i = 0; i <= steps; i++) {
+          const a = Math.PI / 2 - (i / steps) * Math.PI;
+          ctx.lineTo(cx + pk * moonRadius * Math.cos(a), cy + moonRadius * Math.sin(a));
+        }
+      } else {
+        ctx.moveTo(cx, cy - moonRadius);
+        ctx.arc(cx, cy, moonRadius, -Math.PI / 2, Math.PI / 2, false);
+        for (let i = 0; i <= steps; i++) {
+          const a = Math.PI / 2 - (i / steps) * Math.PI;
+          ctx.lineTo(cx + pk * moonRadius * Math.cos(a), cy + moonRadius * Math.sin(a));
+        }
+      }
+      ctx.closePath();
+      ctx.fillStyle = `rgba(5, 5, 15, ${pp.alpha})`;
+      ctx.fill(); ctx.restore();
+    }
+
+    // Hard shadow
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, moonRadius, 0, Math.PI * 2); ctx.clip();
+    ctx.beginPath();
+    if (isWaxing) {
+      ctx.moveTo(cx, cy - moonRadius);
+      ctx.arc(cx, cy, moonRadius, -Math.PI / 2, Math.PI / 2, true);
+      for (let i = 0; i <= steps; i++) {
+        const a = Math.PI / 2 - (i / steps) * Math.PI;
+        ctx.lineTo(cx + k * moonRadius * Math.cos(a), cy + moonRadius * Math.sin(a));
+      }
+    } else {
+      ctx.moveTo(cx, cy - moonRadius);
+      ctx.arc(cx, cy, moonRadius, -Math.PI / 2, Math.PI / 2, false);
+      for (let i = 0; i <= steps; i++) {
+        const a = Math.PI / 2 - (i / steps) * Math.PI;
+        ctx.lineTo(cx + k * moonRadius * Math.cos(a), cy + moonRadius * Math.sin(a));
+      }
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(5, 5, 15, 0.97)';
+    ctx.fill(); ctx.restore();
+
+    // Earthshine on dark side (crescent phases)
+    if (illumination < 0.45) {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, cy, moonRadius - 1, 0, Math.PI * 2); ctx.clip();
+      const esX = isWaxing ? cx - moonRadius * 0.4 : cx + moonRadius * 0.4;
+      const es = ctx.createRadialGradient(esX, cy, moonRadius * 0.2, cx, cy, moonRadius);
+      const esI = (0.45 - illumination) * 0.035;
+      es.addColorStop(0, `rgba(120, 140, 190, ${esI})`);
+      es.addColorStop(0.6, `rgba(90, 110, 160, ${esI * 0.2})`);
+      es.addColorStop(1, 'transparent');
+      ctx.fillStyle = es;
+      ctx.fillRect(cx - moonRadius, cy - moonRadius, moonRadius * 2, moonRadius * 2);
+      ctx.restore();
+    }
+
+    // Thin bright limb
+    ctx.beginPath(); ctx.arc(cx, cy, moonRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(220, 218, 240, ${0.08 + illumination * 0.08})`;
+    ctx.lineWidth = 0.8; ctx.stroke();
+
+    // ── Phase arc ring ──
+    const arcR = moonRadius * 1.2;
+    const startA = -Math.PI / 2;
+    const endA = startA + Math.PI * 2 * phase;
+
+    // Track
+    ctx.beginPath(); ctx.arc(cx, cy, arcR, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(200, 196, 220, 0.05)'; ctx.lineWidth = 1; ctx.stroke();
+
+    if (phase > 0.002) {
+      // Glow
+      ctx.beginPath(); ctx.arc(cx, cy, arcR, startA, endA);
+      ctx.strokeStyle = `rgba(200, 196, 220, ${0.06 + illumination * 0.06})`;
+      ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke();
+      // Core
+      ctx.beginPath(); ctx.arc(cx, cy, arcR, startA, endA);
+      ctx.strokeStyle = `rgba(230, 226, 244, ${0.25 + illumination * 0.25})`;
+      ctx.lineWidth = 1.2; ctx.lineCap = 'round'; ctx.stroke();
+      // End dot
+      const dotPulse = Math.sin(frame * 0.025) * 0.25 + 0.75;
+      ctx.beginPath();
+      ctx.arc(cx + arcR * Math.cos(endA), cy + arcR * Math.sin(endA), 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232, 201, 122, ${0.5 * dotPulse})`; ctx.fill();
+    }
 
     rafRef.current = requestAnimationFrame(draw);
   }, [phase, illumination]);
 
+  // ── Setup ──
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Create star sprites and moon texture once
-    if (!spritesRef.current) {
-      spritesRef.current = createAllStarSprites();
+    // Create star sprites once
+    if (spritesRef.current.length === 0) {
+      spritesRef.current = createStarSprites();
     }
-    if (!moonTextureRef.current) {
-      moonTextureRef.current = generateMoonTexture(512);
+
+    // Create moon texture once
+    if (!moonTexRef.current) {
+      moonTexRef.current = createMoonTexture(512);
     }
 
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
 
-      // Only regenerate stars if size actually changed significantly
-      if (Math.abs(w - prevSizeRef.current.w) < 5 && Math.abs(h - prevSizeRef.current.h) < 5) return;
+      // Only regenerate if size actually changed
+      if (Math.abs(w - prevSizeRef.current.w) < 3 && Math.abs(h - prevSizeRef.current.h) < 3) return;
       prevSizeRef.current = { w, h };
 
       canvas.width = w * dpr;
@@ -517,67 +545,39 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
       const ctx = canvas.getContext('2d');
       if (ctx) ctx.scale(dpr, dpr);
       sizeRef.current = { w, h };
-      starsRef.current = generateStars(w, h, 1000);
+      starsRef.current = generateStars(w, h);
     };
+
     resize();
     window.addEventListener('resize', resize);
     rafRef.current = requestAnimationFrame(draw);
-    return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(rafRef.current); };
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(rafRef.current);
+    };
   }, [draw]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden" style={{ background: '#05050F' }}>
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-      {/* Bottom fade — blends into page content */}
+    <div className="relative w-full h-full overflow-visible">
+      <canvas
+        ref={canvasRef}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      />
+      {/* Bottom fade — blends moon space into page content */}
       <div
         style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '120px',
-          background: 'linear-gradient(to top, #05050F 0%, transparent 100%)',
-          pointerEvents: 'none',
-          zIndex: 2,
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '100px',
+          background: 'linear-gradient(to top, #05050F 0%, rgba(5,5,15,0.6) 40%, transparent 100%)',
+          pointerEvents: 'none', zIndex: 2,
         }}
       />
       {/* Top fade — blends into header */}
       <div
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '60px',
-          background: 'linear-gradient(to bottom, #05050F 0%, transparent 100%)',
-          pointerEvents: 'none',
-          zIndex: 2,
-        }}
-      />
-      {/* Left edge fade */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          bottom: 0,
-          left: 0,
-          width: '40px',
-          background: 'linear-gradient(to right, #05050F 0%, transparent 100%)',
-          pointerEvents: 'none',
-          zIndex: 2,
-        }}
-      />
-      {/* Right edge fade */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          bottom: 0,
-          right: 0,
-          width: '40px',
-          background: 'linear-gradient(to left, #05050F 0%, transparent 100%)',
-          pointerEvents: 'none',
-          zIndex: 2,
+          position: 'absolute', top: 0, left: 0, right: 0, height: '50px',
+          background: 'linear-gradient(to bottom, rgba(5,5,15,0.7) 0%, transparent 100%)',
+          pointerEvents: 'none', zIndex: 2,
         }}
       />
     </div>
