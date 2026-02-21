@@ -174,27 +174,31 @@ export default function Home() {
 
       {/* ── Zone 4: Session Intelligence Panel ─────────── */}
       <ScrollReveal delay={0.1}>
-        <section className="max-w-3xl mx-auto px-6 pb-16">
-          <SessionPanel
-            intelligence={intelligence}
-            moonData={moonData}
-            lunarDistance={lunarDistance}
-            isLoading={isLoading}
-            userInstruments={userInstruments}
-            playTone={audioEnabled ? playTone : undefined}
-            stopTone={audioEnabled ? stopTone : undefined}
-            activeToneHz={activeToneHz}
-          />
+        <section className="max-w-3xl mx-auto px-6 pb-16 cosmic-dust">
+          <div className="relative z-10">
+            <SessionPanel
+              intelligence={intelligence}
+              moonData={moonData}
+              lunarDistance={lunarDistance}
+              isLoading={isLoading}
+              userInstruments={userInstruments}
+              playTone={audioEnabled ? playTone : undefined}
+              stopTone={audioEnabled ? stopTone : undefined}
+              activeToneHz={activeToneHz}
+            />
+          </div>
         </section>
       </ScrollReveal>
 
       {/* ── Zone 5: Lunar Calendar ──────────────────── */}
       <ScrollReveal delay={0.2}>
-        <section className="max-w-3xl mx-auto px-6 pb-20">
-          <LunarCalendar
-            latitude={location.latitude}
-            longitude={location.longitude}
-          />
+        <section className="max-w-3xl mx-auto px-6 pb-20 cosmic-dust">
+          <div className="relative z-10">
+            <LunarCalendar
+              latitude={location.latitude}
+              longitude={location.longitude}
+            />
+          </div>
         </section>
       </ScrollReveal>
 
