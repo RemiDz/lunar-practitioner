@@ -1,15 +1,12 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import StarField from './StarField';
 import MoonHalo from './MoonHalo';
 import PhaseArc from './PhaseArc';
 import ZodiacConstellation from './ZodiacConstellation';
+import CSSMoon from './CSSMoon';
 import type { MoonData, ZodiacPosition } from '@/types/lunar';
-
-// SSR-disabled Three.js layer
-const MoonScene = dynamic(() => import('./MoonScene'), { ssr: false });
 
 interface MoonCanvasProps {
   moonData: MoonData | null;
@@ -74,7 +71,7 @@ export default function MoonCanvas({ moonData, zodiacPosition }: MoonCanvasProps
         isSupermoon={false}
       />
 
-      {/* z-3: Three.js moon orb */}
+      {/* z-3: CSS moon orb */}
       {dimensions.width > 0 && (
         <div
           className="absolute"
@@ -87,7 +84,11 @@ export default function MoonCanvas({ moonData, zodiacPosition }: MoonCanvasProps
             transform: 'translate(-50%, -50%)',
           }}
         >
-          <MoonScene phase={phase} diameter={moonDiameter} />
+          <CSSMoon
+            phase={phase}
+            illumination={illumination}
+            diameter={moonDiameter}
+          />
         </div>
       )}
 
