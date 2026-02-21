@@ -84,6 +84,58 @@ function generateStars(w: number, h: number, count: number): Star[] {
   return stars;
 }
 
+function generateMoonTexture(size: number): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext('2d')!;
+  const imageData = ctx.createImageData(size, size);
+  const data = imageData.data;
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const idx = (y * size + x) * 4;
+      const dx = (x / size - 0.5) * 2;
+      const dy = (y / size - 0.5) * 2;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 1) {
+        data[idx] = data[idx + 1] = data[idx + 2] = 0;
+        data[idx + 3] = 0;
+        continue;
+      }
+
+      const nz = Math.sqrt(1 - dist * dist);
+
+      // Multi-scale noise
+      let noise = 0;
+      const scales = [0.02, 0.05, 0.1, 0.2];
+      const weights = [0.4, 0.3, 0.2, 0.1];
+      for (let i = 0; i < scales.length; i++) {
+        noise += (Math.sin(x * scales[i] * 7.3 + y * scales[i] * 3.7) *
+                  Math.cos(x * scales[i] * 4.1 - y * scales[i] * 6.3) + 1) * 0.5 * weights[i];
+      }
+
+      // Limb darkening
+      const limbFactor = Math.pow(nz, 0.4);
+      const base = 140 + noise * 60;
+      const brightness = base * limbFactor;
+
+      // Slight colour variation (cooler at edges)
+      const r = Math.min(255, brightness * 0.95);
+      const g = Math.min(255, brightness * 0.93);
+      const b = Math.min(255, brightness);
+
+      data[idx] = r;
+      data[idx + 1] = g;
+      data[idx + 2] = b;
+      data[idx + 3] = 255;
+    }
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+  return c;
+}
+
 function drawMilkyWay(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.save();
   ctx.translate(w / 2, h / 2);
@@ -115,7 +167,8 @@ function drawMoon(
   radius: number,
   phase: number,
   illumination: number,
-  frame: number
+  frame: number,
+  moonTexture: HTMLCanvasElement | null
 ) {
   const r = radius;
 
@@ -153,82 +206,23 @@ function drawMoon(
     ctx.fill();
   }
 
-  // Moon disk
+  // Moon disk — use procedural texture if available
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.clip();
 
-  const baseGrad = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.15, r * 0.05, cx + r * 0.1, cy + r * 0.05, r);
-  baseGrad.addColorStop(0, '#e0dce8');
-  baseGrad.addColorStop(0.15, '#ccc8d8');
-  baseGrad.addColorStop(0.35, '#b0acc0');
-  baseGrad.addColorStop(0.55, '#9892a8');
-  baseGrad.addColorStop(0.75, '#807a90');
-  baseGrad.addColorStop(0.9, '#686278');
-  baseGrad.addColorStop(1, '#504a60');
-  ctx.fillStyle = baseGrad;
-  ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-
-  // Maria (dark lunar seas)
-  const maria = [
-    { x: 0.32, y: 0.3, rx: 0.16, ry: 0.14, a: 0.12, rot: -0.2 },
-    { x: 0.52, y: 0.32, rx: 0.09, ry: 0.1, a: 0.1, rot: 0.1 },
-    { x: 0.58, y: 0.45, rx: 0.12, ry: 0.1, a: 0.11, rot: 0.3 },
-    { x: 0.25, y: 0.5, rx: 0.15, ry: 0.22, a: 0.08, rot: -0.1 },
-    { x: 0.42, y: 0.65, rx: 0.1, ry: 0.08, a: 0.09, rot: 0 },
-    { x: 0.72, y: 0.35, rx: 0.06, ry: 0.08, a: 0.1, rot: 0.4 },
-    { x: 0.65, y: 0.58, rx: 0.08, ry: 0.07, a: 0.07, rot: 0.2 },
-  ];
-  for (const m of maria) {
-    ctx.save();
-    const mx = cx - r + m.x * 2 * r;
-    const my = cy - r + m.y * 2 * r;
-    ctx.translate(mx, my);
-    ctx.rotate(m.rot);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, m.rx * r, m.ry * r, 0, 0, Math.PI * 2);
-    const mareGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(m.rx, m.ry) * r);
-    mareGrad.addColorStop(0, `rgba(30, 25, 50, ${m.a})`);
-    mareGrad.addColorStop(0.6, `rgba(30, 25, 50, ${m.a * 0.5})`);
-    mareGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = mareGrad;
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Craters
-  const craters = [
-    { x: 0.38, y: 0.2, s: 0.025, a: 0.15 },
-    { x: 0.7, y: 0.25, s: 0.02, a: 0.12 },
-    { x: 0.55, y: 0.15, s: 0.018, a: 0.1 },
-    { x: 0.3, y: 0.72, s: 0.03, a: 0.13 },
-    { x: 0.62, y: 0.68, s: 0.022, a: 0.11 },
-    { x: 0.2, y: 0.4, s: 0.015, a: 0.09 },
-    { x: 0.78, y: 0.55, s: 0.02, a: 0.1 },
-    { x: 0.45, y: 0.82, s: 0.025, a: 0.12 },
-    { x: 0.15, y: 0.6, s: 0.018, a: 0.08 },
-    { x: 0.42, y: 0.78, s: 0.015, a: -0.06 },
-  ];
-  for (const c of craters) {
-    const ccx = cx - r + c.x * 2 * r;
-    const ccy = cy - r + c.y * 2 * r;
-    const craterGrad = ctx.createRadialGradient(ccx, ccy, 0, ccx, ccy, c.s * r * 2);
-    if (c.a > 0) {
-      craterGrad.addColorStop(0, `rgba(20, 15, 40, ${c.a})`);
-      craterGrad.addColorStop(0.4, `rgba(20, 15, 40, ${c.a * 0.6})`);
-      craterGrad.addColorStop(0.7, `rgba(20, 15, 40, ${c.a * 0.2})`);
-      craterGrad.addColorStop(1, 'transparent');
-    } else {
-      const ba = Math.abs(c.a);
-      craterGrad.addColorStop(0, `rgba(220, 215, 235, ${ba})`);
-      craterGrad.addColorStop(0.5, `rgba(220, 215, 235, ${ba * 0.3})`);
-      craterGrad.addColorStop(1, 'transparent');
-    }
-    ctx.fillStyle = craterGrad;
-    ctx.beginPath();
-    ctx.arc(ccx, ccy, c.s * r * 2, 0, Math.PI * 2);
-    ctx.fill();
+  if (moonTexture) {
+    ctx.drawImage(moonTexture, cx - r, cy - r, r * 2, r * 2);
+  } else {
+    // Fallback flat gradient
+    const baseGrad = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.15, r * 0.05, cx + r * 0.1, cy + r * 0.05, r);
+    baseGrad.addColorStop(0, '#e0dce8');
+    baseGrad.addColorStop(0.35, '#b0acc0');
+    baseGrad.addColorStop(0.7, '#807a90');
+    baseGrad.addColorStop(1, '#504a60');
+    ctx.fillStyle = baseGrad;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
   }
 
   // Limb darkening
@@ -430,6 +424,7 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
   const sizeRef = useRef({ w: 0, h: 0 });
   const prevSizeRef = useRef({ w: 0, h: 0 });
   const spritesRef = useRef<StarSprites | null>(null);
+  const moonTextureRef = useRef<HTMLCanvasElement | null>(null);
 
   const phase = moonData?.phase ?? 0;
   const illumination = moonData?.illumination ?? 0;
@@ -487,7 +482,7 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
     }
 
     shootingStarsRef.current = updateShootingStars(ctx, shootingStarsRef.current, w, h);
-    drawMoon(ctx, cx, cy, moonRadius, phase, illumination, frame);
+    drawMoon(ctx, cx, cy, moonRadius, phase, illumination, frame, moonTextureRef.current);
     drawPhaseArc(ctx, cx, cy, moonRadius, phase, illumination, frame);
 
     rafRef.current = requestAnimationFrame(draw);
@@ -497,9 +492,12 @@ export default function MoonCanvas({ moonData }: MoonCanvasProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Create star sprites once
+    // Create star sprites and moon texture once
     if (!spritesRef.current) {
       spritesRef.current = createAllStarSprites();
+    }
+    if (!moonTextureRef.current) {
+      moonTextureRef.current = generateMoonTexture(512);
     }
 
     const resize = () => {
