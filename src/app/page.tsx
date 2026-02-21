@@ -212,6 +212,27 @@ export default function Home() {
           </section>
         </ScrollReveal>
 
+        {/* ── Footer ──────────────────────────── */}
+        <footer className="relative z-10 py-10 text-center">
+          <div className="flex flex-col items-center gap-3">
+            <div
+              className="w-16 h-px"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(200,196,220,0.12), transparent)',
+              }}
+            />
+            <p className="font-mono text-[10px] tracking-[0.2em] text-moonsilver/25 uppercase">
+              Crafted by
+            </p>
+            <p className="font-display text-sm text-moonsilver/40 tracking-wide">
+              Remigijus Dzingelevičius
+            </p>
+            <p className="font-mono text-[9px] tracking-[0.15em] text-moonsilver/15 uppercase mt-1">
+              NestorLab · 2025
+            </p>
+          </div>
+        </footer>
+
         {/* ── Settings Modal ───────────────────── */}
         <SettingsModal
           isOpen={settingsOpen}
