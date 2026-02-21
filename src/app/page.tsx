@@ -76,7 +76,7 @@ export default function Home() {
         <motion.header
           className="sticky top-0 z-50 backdrop-blur-md bg-void-black/70 border-b border-moonsilver/10"
           initial={splashDismissed ? false : { opacity: 0, y: -12 }}
-          animate={splashDismissed ? { opacity: 1, y: 0 } : undefined}
+          animate={{ opacity: splashDismissed ? 1 : 0, y: splashDismissed ? 0 : -12 }}
           transition={{ duration: DURATION_PAGE_ENTER, ease: [...EASE_LUNAR], delay: 0 }}
         >
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4 text-sm">
@@ -151,7 +151,7 @@ export default function Home() {
           className="relative w-full"
           style={{ height: '45vh', minHeight: 320 }}
           initial={splashDismissed ? false : { opacity: 0, scale: 0.97 }}
-          animate={splashDismissed ? { opacity: 1, scale: 1 } : undefined}
+          animate={{ opacity: splashDismissed ? 1 : 0, scale: splashDismissed ? 1 : 0.97 }}
           transition={{ duration: DURATION_PAGE_ENTER, ease: [...EASE_LUNAR], delay: STAGGER_PAGE_ZONE }}
         >
           <MoonCanvas moonData={moonData} zodiacPosition={zodiacPosition} />
