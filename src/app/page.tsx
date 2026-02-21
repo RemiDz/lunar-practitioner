@@ -9,6 +9,7 @@ import { getPhaseDirection } from '@/lib/moon-calculations';
 import { ZODIAC_CONFIGS } from '@/data/zodiac';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { MoonCanvas } from '@/components/MoonCanvas';
+import OrbitalInfo from '@/components/MoonCanvas/OrbitalInfo';
 import { SessionPanel } from '@/components/SessionPanel';
 import { SettingsModal } from '@/components/Settings';
 import { SessionCardGenerator } from '@/components/SessionCard';
@@ -141,9 +142,12 @@ export default function Home() {
           style={{ height: '80vh', minHeight: 450 }}
         >
           <div className="relative" style={{ width: 'min(85vw, 420px)', height: 'min(85vw, 420px)' }}>
+            {/* Moon orb canvas */}
             <div className="absolute inset-0 flex items-center justify-center">
               <MoonCanvas moonData={moonData} zodiacPosition={zodiacPosition} />
             </div>
+            {/* Orbital data overlay */}
+            <OrbitalInfo moonData={moonData} zodiacPosition={zodiacPosition} />
           </div>
         </section>
 
