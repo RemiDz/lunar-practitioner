@@ -11,10 +11,12 @@ import { ZODIAC_ORDER } from '@/data/zodiac';
  * These are ESM-only and must be loaded async in Next.js.
  */
 async function getAstronomiaModules() {
+  console.log('[LP Debug] Loading astronomia modules...');
   const [moonpositionModule, julianModule] = await Promise.all([
     import('astronomia/moonposition'),
     import('astronomia/julian'),
   ]);
+  console.log('[LP Debug] astronomia modules loaded OK');
   return {
     moonposition: moonpositionModule.default || moonpositionModule,
     julian: julianModule.default || julianModule,
@@ -53,14 +55,19 @@ export function getDegreeInSign(longitudeDeg: number): number {
 export async function getMoonZodiacPosition(
   date: Date = new Date()
 ): Promise<ZodiacPosition> {
+  console.log('[LP Debug] getMoonZodiacPosition called');
   const { moonposition, julian } = await getAstronomiaModules();
 
   // Convert Date to Julian Ephemeris Day
+  console.log('[LP Debug] Creating CalendarGregorian...');
   const cal = new julian.CalendarGregorian(date);
   const jde = cal.toJDE();
+  console.log('[LP Debug] JDE:', jde);
 
   // Get geocentric ecliptic position
+  console.log('[LP Debug] Getting moon position...');
   const pos = moonposition.position(jde);
+  console.log('[LP Debug] Moon pos:', { lon: pos.lon, lat: pos.lat, range: pos.range });
 
   // pos.lon is in radians — convert to degrees
   const longitudeDeg = pos.lon * RAD_TO_DEG;

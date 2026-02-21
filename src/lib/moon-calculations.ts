@@ -53,8 +53,11 @@ export function getMoonData(
   longitude: number,
   date: Date = new Date()
 ): MoonData {
+  console.log('[LP Debug] getMoonData() entry, lat/lon:', latitude, longitude);
   const illumination = SunCalc.getMoonIllumination(date);
+  console.log('[LP Debug] suncalc illumination:', { phase: illumination.phase, fraction: illumination.fraction });
   const position = SunCalc.getMoonPosition(date, latitude, longitude);
+  console.log('[LP Debug] suncalc position:', { altitude: position.altitude, distance: position.distance });
   const times = SunCalc.getMoonTimes(date, latitude, longitude);
 
   const phaseName = getPhaseName(illumination.phase);

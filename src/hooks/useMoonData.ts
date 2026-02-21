@@ -59,18 +59,26 @@ export function useMoonData(locationOverride?: GeoLocation | null): UseMoonDataR
 
   // Calculate moon data
   const calculate = useCallback(async () => {
+    console.log('[LP Debug] calculate() called, location:', location.latitude, location.longitude);
     try {
       const now = new Date();
+      console.log('[LP Debug] Calling getMoonData...');
       const moon = getMoonData(location.latitude, location.longitude, now);
+      console.log('[LP Debug] getMoonData result:', moon?.phaseName, moon?.illuminationPercent);
       setMoonData(moon);
 
+      console.log('[LP Debug] Calling getMoonZodiacPosition...');
       const zodiac = await getMoonZodiacPosition(now);
+      console.log('[LP Debug] zodiac result:', zodiac?.signName, zodiac?.degreeInSign);
       setZodiacPosition(zodiac);
 
       setError(null);
+      console.log('[LP Debug] calculate() SUCCESS');
     } catch (err) {
+      console.error('[LP Debug] calculate() ERROR:', err);
       setError(err instanceof Error ? err.message : 'Calculation error');
     } finally {
+      console.log('[LP Debug] calculate() finally — setting isLoading=false');
       setIsLoading(false);
     }
   }, [location.latitude, location.longitude]);
