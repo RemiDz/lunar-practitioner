@@ -1,0 +1,4 @@
+cd C:\Users\rdzingel\Desktop\MY_APPS\MoonApp
+git add -A
+git commit -m "Fix: remove framer-motion from page shell, fix splash screen"
+git push
