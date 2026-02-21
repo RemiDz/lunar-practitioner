@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"C:/Users/rdzingel/Desktop/MY_APPS/MoonApp\" && npx create-next-app@14 . --typescript --tailwind --eslint --app --src-dir --no-import-alias --use-npm 2>&1)",
+      "Bash(ls:*)",
+      "Bash(cd \"C:/Users/rdzingel/Desktop/MY_APPS/MoonApp\" && npm install suncalc astronomia three framer-motion gsap 2>&1)",
+      "Bash(cd \"C:/Users/rdzingel/Desktop/MY_APPS/MoonApp\" && npm install --save-dev @types/three @types/suncalc 2>&1)",
+      "Bash(tail:*)",
+      "Bash(true:*)",
+      "Bash(cd \"C:/Users/rdzingel/Desktop/MY_APPS/MoonApp\" && npx next build 2>&1)",
+      "Bash(gh auth:*)",
+      "Bash(echo gh not found:*)",
+      "Bash(cd:*)",
+      "Bash(cd \"C:/Users/rdzingel/Desktop/MY_APPS/MoonApp\" && git remote add origin https://github.com/RemiDz/lunar-practitioner.git && git push -u origin master 2>&1)",
+      "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && npm install @react-three/fiber @react-three/drei 2>&1)",
+      "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && npm install @react-three/fiber@8 @react-three/drei@9 2>&1)",
+      "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && curl -L -o public/textures/moon-surface.jpg \"https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_2048.jpg\" 2>&1)",
+      "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && curl -L -o public/textures/moon-surface.jpg \"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/FullMoon2010.jpg/1280px-FullMoon2010.jpg\" 2>&1)",
+      "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && curl -L -o public/textures/moon-surface.jpg \"https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/moon_1024.jpg\" --max-redirs 10 2>&1)",
+      "Bash(cd /c/Users/rdzingel/Desktop/MY_APPS/MoonApp && npm run build 2>&1)"
+    ]
+  }
+}

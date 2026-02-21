@@ -1,101 +1,105 @@
-import Image from "next/image";
+'use client';
+
+import { useSessionIntelligence } from '@/hooks/useSessionIntelligence';
+import { getLunarDistance } from '@/lib/moon-calculations';
+import { getPhaseDirection } from '@/lib/moon-calculations';
+import { ZODIAC_CONFIGS } from '@/data/zodiac';
+import { MoonCanvas } from '@/components/MoonCanvas';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const { intelligence, moonData, zodiacPosition, isLoading } =
+    useSessionIntelligence();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const lunarDistance = moonData ? getLunarDistance(moonData.distance) : null;
+  const zodiacConfig = zodiacPosition
+    ? ZODIAC_CONFIGS[zodiacPosition.signName]
+    : null;
+
+  return (
+    <main className="min-h-screen bg-void-black text-selenite-white font-body">
+      {/* ── Zone 1: Live Indicator Bar ────────────── */}
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-void-black/70 border-b border-moonsilver/10">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            {/* Pulsing live dot */}
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lunar-gold opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-lunar-gold" />
+            </span>
+            <span className="font-mono text-moonsilver text-xs tracking-wider uppercase">
+              Live
+            </span>
+          </div>
+
+          {isLoading ? (
+            <span className="text-moonsilver/50 font-mono text-xs">
+              Calculating...
+            </span>
+          ) : (
+            <div className="flex items-center gap-4 text-xs font-mono">
+              {moonData && (
+                <>
+                  <span className="text-selenite-white">
+                    {moonData.phaseDisplayName}
+                  </span>
+                  <span className="text-moonsilver">
+                    {moonData.illuminationPercent}
+                  </span>
+                </>
+              )}
+              {zodiacConfig && (
+                <span className="text-lunar-gold">
+                  {zodiacConfig.symbol} {zodiacConfig.name}
+                </span>
+              )}
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </header>
+
+      {/* ── Zone 2: Moon Canvas (45vh) ────────────── */}
+      <section className="relative w-full" style={{ height: '45vh', minHeight: 320 }}>
+        <MoonCanvas moonData={moonData} zodiacPosition={zodiacPosition} />
+      </section>
+
+      {/* ── Zone 3: Phase Identity ─────────────────── */}
+      <section className="max-w-2xl mx-auto px-6 py-10 text-center">
+        {isLoading ? (
+          <div className="space-y-3 animate-pulse">
+            <div className="h-8 w-48 bg-moonsilver/10 rounded mx-auto" />
+            <div className="h-4 w-64 bg-moonsilver/10 rounded mx-auto" />
+          </div>
+        ) : intelligence && moonData ? (
+          <div className="space-y-4">
+            <h1 className="font-display text-4xl md:text-5xl font-light tracking-wide text-selenite-white">
+              {moonData.phaseDisplayName}
+            </h1>
+            <p className="font-display text-lg text-lunar-gold italic">
+              {intelligence.subtitle}
+            </p>
+            <p className="text-moonsilver/70 text-sm font-mono">
+              {getPhaseDirection(moonData.phase)}
+              {lunarDistance?.isSupermoon && ' · Supermoon'}
+              {lunarDistance?.isMicromoon && ' · Micromoon'}
+            </p>
+            <blockquote className="text-moonsilver text-base font-display italic leading-relaxed mt-6 px-4">
+              &ldquo;{intelligence.quote}&rdquo;
+            </blockquote>
+          </div>
+        ) : null}
+      </section>
+
+      {/* ── Zone 4: Session Intelligence (Phase 3 placeholder) ─ */}
+      <section className="max-w-3xl mx-auto px-6 pb-16">
+        <div className="border border-moonsilver/10 rounded-lg p-8 text-center">
+          <p className="text-moonsilver/40 text-sm font-mono tracking-wider uppercase">
+            Session Intelligence Panel
+          </p>
+          <p className="text-moonsilver/25 text-xs mt-2 font-mono">
+            Coming in Phase 3
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }
