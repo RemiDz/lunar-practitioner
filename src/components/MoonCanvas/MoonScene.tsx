@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { Suspense, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -75,10 +75,11 @@ function MoonSphere({ phase }: { phase: number }) {
       uTexture: { value: texture },
       uPhase: { value: phase },
     }),
-    [texture, phase]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [texture]
   );
 
-  // Update phase uniform when it changes
+  // Update phase uniform every frame (uniforms object is stable)
   useFrame((_state) => {
     if (meshRef.current) {
       const mat = meshRef.current.material as THREE.ShaderMaterial;
@@ -118,7 +119,9 @@ export default function MoonScene({ phase, diameter }: MoonSceneProps) {
       style={{ width: '100%', height: '100%' }}
       dpr={[1, 2]}
     >
-      <MoonSphere phase={phase} />
+      <Suspense fallback={null}>
+        <MoonSphere phase={phase} />
+      </Suspense>
     </Canvas>
   );
 }
