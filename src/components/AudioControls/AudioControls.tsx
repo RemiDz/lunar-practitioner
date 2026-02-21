@@ -32,7 +32,7 @@ export default function AudioControls({
       {isInitialised && (
         <button
           onClick={onToggleDrone}
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider transition-all ${
+          className={`px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider transition-all ${
             isDroneActive
               ? 'bg-lunar-gold/15 border border-lunar-gold/30 text-lunar-gold shadow-[0_0_8px_rgba(232,201,122,0.15)]'
               : 'border border-moonsilver/15 text-moonsilver/50 hover:text-moonsilver/70'
@@ -59,7 +59,7 @@ export default function AudioControls({
       {/* Speaker icon */}
       <button
         onClick={handleSpeakerClick}
-        className="text-moonsilver/50 hover:text-selenite-white transition-colors p-1"
+        className="text-moonsilver/50 hover:text-selenite-white transition-colors p-2"
         aria-label={isInitialised ? 'Toggle mute' : 'Enable audio'}
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

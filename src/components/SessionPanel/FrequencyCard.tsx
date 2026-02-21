@@ -47,7 +47,7 @@ export default function FrequencyCard({
               {playTone && stopTone && (
                 <button
                   onClick={() => isPlaying ? stopTone() : playTone(freq.hz)}
-                  className={`flex-shrink-0 w-6 h-6 rounded-full border flex items-center justify-center transition-all ${
+                  className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
                     isPlaying
                       ? 'border-lunar-gold/50 bg-lunar-gold/15 text-lunar-gold'
                       : 'border-moonsilver/20 text-moonsilver/40 hover:text-moonsilver/70 hover:border-moonsilver/40'

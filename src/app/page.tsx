@@ -99,16 +99,16 @@ export default function Home() {
               <div className="flex items-center gap-4 text-xs font-mono">
                 {moonData && (
                   <>
-                    <span className="text-selenite-white">
+                    <span className="text-selenite-white truncate">
                       {moonData.phaseDisplayName}
                     </span>
-                    <span className="text-moonsilver">
+                    <span className="text-moonsilver hidden sm:inline">
                       {moonData.illuminationPercent}
                     </span>
                   </>
                 )}
                 {zodiacConfig && (
-                  <span className="text-lunar-gold">
+                  <span className="text-lunar-gold hidden sm:inline">
                     {zodiacConfig.symbol} {zodiacConfig.name}
                   </span>
                 )}
