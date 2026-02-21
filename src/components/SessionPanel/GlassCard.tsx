@@ -1,28 +1,13 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { DURATION_CARD_ENTER } from '@/lib/motion-constants';
-import type { Variants } from 'framer-motion';
-
 interface GlassCardProps {
   label: string;
   accentColour?: string;
   fullWidth?: boolean;
   skeleton?: boolean;
   children?: React.ReactNode;
+  className?: string;
 }
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: DURATION_CARD_ENTER,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  },
-};
 
 export default function GlassCard({
   label,
@@ -30,22 +15,21 @@ export default function GlassCard({
   fullWidth,
   skeleton,
   children,
+  className = '',
 }: GlassCardProps) {
   return (
-    <motion.div
-      variants={cardVariants}
+    <div
       className={`
-        relative overflow-hidden
-        bg-[#0D0D25]/90 backdrop-blur-md
-        border border-moonsilver/10 rounded-xl
+        glass-card card-reveal
         p-5 md:p-6
         ${fullWidth ? 'md:col-span-2' : ''}
+        ${className}
       `}
     >
       {/* Accent top border */}
       {accentColour && (
         <div
-          className="absolute top-0 inset-x-0 h-px transition-colors duration-1000 ease-in-out"
+          className="absolute top-0 inset-x-0 h-px transition-colors duration-1000 ease-in-out z-[1]"
           style={{ backgroundColor: accentColour }}
         />
       )}
@@ -66,6 +50,6 @@ export default function GlassCard({
       ) : (
         children
       )}
-    </motion.div>
+    </div>
   );
 }

@@ -14,6 +14,7 @@ import { SessionCardGenerator } from '@/components/SessionCard';
 import { LunarCalendar } from '@/components/Calendar';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { AudioControls } from '@/components/AudioControls';
+import { ScrollReveal } from '@/components/ScrollReveal';
 
 export default function Home() {
   const {
@@ -132,59 +133,65 @@ export default function Home() {
       </section>
 
       {/* ── Zone 3: Phase Identity ─────────────────── */}
-      <section className="max-w-2xl mx-auto px-6 py-10 text-center">
-        {error ? (
-          <ErrorDisplay
-            mode="inline"
-            error={error}
-            onRetry={() => window.location.reload()}
-          />
-        ) : isLoading ? (
-          <div className="space-y-3 animate-pulse">
-            <div className="h-8 w-48 bg-moonsilver/10 rounded mx-auto" />
-            <div className="h-4 w-64 bg-moonsilver/10 rounded mx-auto" />
-          </div>
-        ) : intelligence && moonData ? (
-          <div className="space-y-4">
-            <h1 className="font-display text-4xl md:text-5xl font-light tracking-wide text-selenite-white">
-              {moonData.phaseDisplayName}
-            </h1>
-            <p className="font-display text-lg text-lunar-gold italic">
-              {intelligence.subtitle}
-            </p>
-            <p className="text-moonsilver/70 text-sm font-mono">
-              {getPhaseDirection(moonData.phase)}
-              {lunarDistance?.isSupermoon && ' · Supermoon'}
-              {lunarDistance?.isMicromoon && ' · Micromoon'}
-            </p>
-            <blockquote className="text-moonsilver text-base font-display italic leading-relaxed mt-6 px-4">
-              &ldquo;{intelligence.quote}&rdquo;
-            </blockquote>
-          </div>
-        ) : null}
-      </section>
+      <ScrollReveal>
+        <section className="max-w-2xl mx-auto px-6 py-10 text-center">
+          {error ? (
+            <ErrorDisplay
+              mode="inline"
+              error={error}
+              onRetry={() => window.location.reload()}
+            />
+          ) : isLoading ? (
+            <div className="space-y-3 animate-pulse">
+              <div className="h-8 w-48 bg-moonsilver/10 rounded mx-auto" />
+              <div className="h-4 w-64 bg-moonsilver/10 rounded mx-auto" />
+            </div>
+          ) : intelligence && moonData ? (
+            <div className="space-y-4">
+              <h1 className="font-display text-4xl md:text-5xl font-light tracking-wide text-selenite-white">
+                {moonData.phaseDisplayName}
+              </h1>
+              <p className="font-display text-lg text-lunar-gold italic">
+                {intelligence.subtitle}
+              </p>
+              <p className="text-moonsilver/70 text-sm font-mono">
+                {getPhaseDirection(moonData.phase)}
+                {lunarDistance?.isSupermoon && ' · Supermoon'}
+                {lunarDistance?.isMicromoon && ' · Micromoon'}
+              </p>
+              <blockquote className="text-moonsilver text-base font-display italic leading-relaxed mt-6 px-4">
+                &ldquo;{intelligence.quote}&rdquo;
+              </blockquote>
+            </div>
+          ) : null}
+        </section>
+      </ScrollReveal>
 
       {/* ── Zone 4: Session Intelligence Panel ─────────── */}
-      <section className="max-w-3xl mx-auto px-6 pb-16">
-        <SessionPanel
-          intelligence={intelligence}
-          moonData={moonData}
-          lunarDistance={lunarDistance}
-          isLoading={isLoading}
-          userInstruments={userInstruments}
-          playTone={audioEnabled ? playTone : undefined}
-          stopTone={audioEnabled ? stopTone : undefined}
-          activeToneHz={activeToneHz}
-        />
-      </section>
+      <ScrollReveal delay={0.1}>
+        <section className="max-w-3xl mx-auto px-6 pb-16">
+          <SessionPanel
+            intelligence={intelligence}
+            moonData={moonData}
+            lunarDistance={lunarDistance}
+            isLoading={isLoading}
+            userInstruments={userInstruments}
+            playTone={audioEnabled ? playTone : undefined}
+            stopTone={audioEnabled ? stopTone : undefined}
+            activeToneHz={activeToneHz}
+          />
+        </section>
+      </ScrollReveal>
 
       {/* ── Zone 5: Lunar Calendar ──────────────────── */}
-      <section className="max-w-3xl mx-auto px-6 pb-20">
-        <LunarCalendar
-          latitude={location.latitude}
-          longitude={location.longitude}
-        />
-      </section>
+      <ScrollReveal delay={0.2}>
+        <section className="max-w-3xl mx-auto px-6 pb-20">
+          <LunarCalendar
+            latitude={location.latitude}
+            longitude={location.longitude}
+          />
+        </section>
+      </ScrollReveal>
 
       {/* ── Settings Modal ──────────────────────────── */}
       <SettingsModal

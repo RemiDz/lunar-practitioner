@@ -40,7 +40,98 @@ body {
   background: var(--moonsilver);
 }
 
-/* Shimmer loading animation */
+/* ── Glass Card Styles ─────────────────── */
+
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.glass-card {
+  background: linear-gradient(
+    135deg,
+    rgba(240, 238, 248, 0.03) 0%,
+    rgba(200, 196, 220, 0.06) 50%,
+    rgba(240, 238, 248, 0.02) 100%
+  );
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid rgba(200, 196, 220, 0.08);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(200, 196, 220, 0.05) inset,
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top edge highlight — simulates light catching the glass edge */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(240, 238, 248, 0.15),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Animated gradient border glow */
+.glass-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 17px;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    transparent 60%,
+    rgba(200, 196, 220, 0.1) 80%,
+    rgba(232, 201, 122, 0.08) 90%,
+    transparent 100%
+  );
+  z-index: -1;
+  animation: borderRotate 8s linear infinite;
+}
+
+@keyframes borderRotate {
+  to { --border-angle: 360deg; }
+}
+
+/* ── Card Entrance Animation ──────────── */
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-reveal {
+  opacity: 0;
+  animation: cardReveal 0.8s ease-out forwards;
+}
+
+/* Stagger children within a grid */
+.card-stagger > *:nth-child(1) { animation-delay: 0s; }
+.card-stagger > *:nth-child(2) { animation-delay: 0.15s; }
+.card-stagger > *:nth-child(3) { animation-delay: 0.3s; }
+.card-stagger > *:nth-child(4) { animation-delay: 0.45s; }
+.card-stagger > *:nth-child(5) { animation-delay: 0.6s; }
+.card-stagger > *:nth-child(6) { animation-delay: 0.75s; }
+
+/* ── Shimmer loading animation ────────── */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
