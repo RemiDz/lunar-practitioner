@@ -56,7 +56,7 @@ export default function Home() {
     : null;
 
   return (
-    <main className="min-h-screen bg-void-black text-selenite-white font-body">
+    <main className="min-h-screen cosmic-atmosphere text-selenite-white font-body">
       {/* ── Zone 1: Live Indicator Bar ────────────── */}
       <header
         className="sticky top-0 z-50 backdrop-blur-md bg-void-black/70 border-b border-moonsilver/10"

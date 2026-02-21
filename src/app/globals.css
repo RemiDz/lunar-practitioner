@@ -40,6 +40,25 @@ body {
   background: var(--moonsilver);
 }
 
+/* ── Deep Space Atmosphere ────────────── */
+
+/* Deep space atmosphere — applies to entire page */
+.cosmic-atmosphere {
+  background:
+    /* Upper nebula glow — bleeds from moon area downward */
+    radial-gradient(ellipse 80% 40% at 50% 15%, rgba(15, 12, 45, 0.6) 0%, transparent 100%),
+    /* Left nebula wisp */
+    radial-gradient(ellipse 40% 50% at 15% 60%, rgba(20, 15, 55, 0.25) 0%, transparent 100%),
+    /* Right nebula wisp */
+    radial-gradient(ellipse 35% 45% at 85% 45%, rgba(15, 18, 50, 0.2) 0%, transparent 100%),
+    /* Lower depth zone */
+    radial-gradient(ellipse 60% 30% at 50% 85%, rgba(12, 10, 35, 0.3) 0%, transparent 100%),
+    /* Centre subtle warmth near cards */
+    radial-gradient(ellipse 50% 35% at 50% 55%, rgba(25, 18, 45, 0.15) 0%, transparent 100%),
+    /* Base void */
+    #05050F;
+}
+
 /* ── Glass Card Styles ─────────────────── */
 
 @property --border-angle {
