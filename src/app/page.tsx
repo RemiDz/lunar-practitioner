@@ -228,7 +228,7 @@ export default function Home() {
               Remigijus Dzingelevičius
             </p>
             <p className="font-mono text-[9px] tracking-[0.15em] text-moonsilver/15 uppercase mt-1">
-              NestorLab · 2025
+              2025
             </p>
           </div>
         </footer>

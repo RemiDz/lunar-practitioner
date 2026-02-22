@@ -310,7 +310,7 @@ export default function ContentStudio() {
 
     ctx.font = `${w * 0.018}px "JetBrains Mono", monospace`;
     ctx.fillStyle = 'rgba(200,196,220,0.2)';
-    ctx.fillText('lunar-practitioner.vercel.app', w / 2, brandY + w * 0.03);
+    ctx.fillText('lunata.app', w / 2, brandY + w * 0.03);
   }, [moonData, intelligence, zodiacConfig, cardFormat]);
 
   // Re-render when data or format changes
@@ -323,7 +323,7 @@ export default function ContentStudio() {
 
   // ── Caption templates ──────────────────────────────
   const currentHookText = currentHooks[selectedHook] || '';
-  const appUrl = 'lunar-practitioner.vercel.app';
+  const appUrl = 'lunata.app';
   const phaseName = moonData?.phaseDisplayName || '';
   const illumPct = moonData?.illuminationPercent || '';
   const quote = intelligence?.quote || '';
@@ -588,7 +588,7 @@ I\u2019ve been using this free moon tracker for my sound healing sessions \u2014
           <div className="flex flex-col items-center gap-3">
             <div className="w-16 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,196,220,0.12), transparent)' }} />
             <p className="font-mono text-[9px] tracking-[0.2em] text-moonsilver/20 uppercase">
-              A NestorLab App
+              Lunata
             </p>
             <p className="font-display text-sm text-moonsilver/35 tracking-wide">
               Crafted by Remigijus Dzingelevi&#269;ius
