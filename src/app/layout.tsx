@@ -42,12 +42,15 @@ export default function RootLayout({
         className={`${cormorant.variable} ${lato.variable} ${jetbrains.variable} antialiased`}
       >
         <ErrorBoundary>{children}</ErrorBoundary>
+        {/* Privacy-friendly analytics by Plausible */}
         <Script
-          src="https://plausible.io/js/pa-ZqKyEhbiJfRrJm3EgzV3w.js"
+          async
+          src="https://plausible.io/js/pa-S0ZkeHodlLppyqzUAcwPG.js"
           strategy="afterInteractive"
         />
         <Script id="plausible-init" strategy="afterInteractive">
-          {`window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()`}
+          {`window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()`}
         </Script>
       </body>
     </html>
