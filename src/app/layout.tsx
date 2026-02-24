@@ -38,21 +38,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        {/* Privacy-friendly analytics by Plausible */}
+      <body
+        className={`${cormorant.variable} ${lato.variable} ${jetbrains.variable} antialiased`}
+      >
+        <ErrorBoundary>{children}</ErrorBoundary>
         <Script
-          async
-          src="https://plausible.io/js/pa-S0ZkeHodlLppyqzUAcwPG.js"
+          src="https://plausible.io/js/pa-ZqKyEhbiJfRrJm3EgzV3w.js"
           strategy="afterInteractive"
         />
         <Script id="plausible-init" strategy="afterInteractive">
           {`window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()`}
         </Script>
-      </head>
-      <body
-        className={`${cormorant.variable} ${lato.variable} ${jetbrains.variable} antialiased`}
-      >
-        <ErrorBoundary>{children}</ErrorBoundary>
       </body>
     </html>
   );
