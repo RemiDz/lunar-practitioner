@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Cormorant_Garamond, Lato, JetBrains_Mono } from "next/font/google";
 import { ErrorBoundary } from "@/components/ErrorDisplay";
 import "./globals.css";
@@ -37,6 +38,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Privacy-friendly analytics by Plausible */}
+        <Script
+          async
+          src="https://plausible.io/js/pa-S0ZkeHodlLppyqzUAcwPG.js"
+          strategy="afterInteractive"
+        />
+        <Script id="plausible-init" strategy="afterInteractive">
+          {`window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()`}
+        </Script>
+      </head>
       <body
         className={`${cormorant.variable} ${lato.variable} ${jetbrains.variable} antialiased`}
       >
