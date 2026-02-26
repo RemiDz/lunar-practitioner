@@ -44,14 +44,11 @@ export default function RootLayout({
         <ErrorBoundary>{children}</ErrorBoundary>
         {/* Privacy-friendly analytics by Plausible */}
         <Script
-          async
-          src="https://plausible.io/js/pa-S0ZkeHodlLppyqzUAcwPG.js"
+          defer
+          data-domain="lunata.app"
+          src="https://plausible.io/js/script.js"
           strategy="afterInteractive"
         />
-        <Script id="plausible-init" strategy="afterInteractive">
-          {`window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-  plausible.init()`}
-        </Script>
       </body>
     </html>
   );
