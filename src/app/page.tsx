@@ -142,8 +142,14 @@ export default function Home() {
           style={{ height: '80vh', minHeight: 450 }}
         >
           <div className="relative" style={{ width: 'min(85vw, 420px)', height: 'min(85vw, 420px)' }}>
-            {/* Moon orb canvas */}
-            <div className="absolute inset-0 flex items-center justify-center">
+            {/* Moon orb canvas — radial mask eliminates visible rectangular container edge */}
+            <div
+              className="absolute inset-0"
+              style={{
+                WebkitMaskImage: 'radial-gradient(circle closest-side at center, black 84%, transparent 100%)',
+                maskImage: 'radial-gradient(circle closest-side at center, black 84%, transparent 100%)',
+              }}
+            >
               <MoonCanvas moonData={moonData} zodiacPosition={zodiacPosition} />
             </div>
             {/* Orbital data overlay */}
