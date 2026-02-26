@@ -22,22 +22,26 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
+/* Hide scrollbar across all browsers */
+html, body {
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
-::-webkit-scrollbar-track {
-  background: var(--void-black);
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--deep-indigo);
-  border-radius: 3px;
+/* Hide scrollbar on scrollable containers */
+.overflow-y-auto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--moonsilver);
+.overflow-y-auto::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Deep Space Atmosphere ────────────── */
