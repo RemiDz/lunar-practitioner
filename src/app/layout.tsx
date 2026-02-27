@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+
 import { Cormorant_Garamond, Lato, JetBrains_Mono } from "next/font/google";
 import { ErrorBoundary } from "@/components/ErrorDisplay";
 import "./globals.css";
@@ -38,17 +38,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Privacy-friendly analytics by Plausible */}
+        <script async src="https://plausible.io/js/pa-S0ZkeHodlLppyqzUAcwPG.js"></script>
+        <script dangerouslySetInnerHTML={{ __html: `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()` }} />
+      </head>
       <body
         className={`${cormorant.variable} ${lato.variable} ${jetbrains.variable} antialiased`}
       >
         <ErrorBoundary>{children}</ErrorBoundary>
-        {/* Privacy-friendly analytics by Plausible */}
-        <Script
-          defer
-          data-domain="lunata.app"
-          src="https://plausible.io/js/script.js"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );
